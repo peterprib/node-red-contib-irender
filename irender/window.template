@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="ISO-8859-1">
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>iRender</title>
+	<script>
+try {
+	let rendering=new IRender();
+} catch(ex) {
+    let thisObject=this,e=document.createElement("script");
+	e.type="application/javascript";
+	e.src = "/{{baseURL}}/initialise"
+	e.onload = function () {
+        console.log("Loaded /{{baseURL}}/initialise");
+        render();
+	}
+    document.getElementsByTagName("head")[0].appendChild(e);
+}
+	
+function render() {	
+let rendering=new IRender();
+rendering.setWindow({title:"{{title}}",footer:"{{footer}}",pane:"main"})
+		.addPane({id:"main",title:"Sub Test",leftMenu:"mainMenu",show:"Test Pane1"})
+		.addPane({id:"testPane",title:"Test Pane"})
+		.addPane({id:"testPane2",title:"Test Pane",closable:true})
+		.addPane({id:"floatPane",title:"Floating Pane"})
+		.addMenu({id:"mainMenu"})
+		.addMenuOption("mainMenu",{title:"Test Link",action:"testAction1"})
+		.addMenuOption("mainMenu",{title:"Test Pane1",action:"testAction2"})
+		.addMenuOption("mainMenu",{title:"Test Folder",action:"folder",passing:{}})
+/*
+		.addMenuOption("mainMenu",{title:"test vis",action:"vis",passing:{config:true,module:"Network",options:{},dataset:nodedata}})
+
+		.addMenuOption("mainMenu",{title:"test vis inline",action:"visInline"});
+		.addMenuOption("mainMenu",{title:"test vis inline g2d",action:"visInlineg2d"})
+*/
+		.addMenuOption("mainMenu",{title:"SVG",action:"svg"})
+		.addMenuOption("mainMenu",{title:"Google Map",action:"googleMap"})
+		.addMenuOption("mainMenu",{title:"States",action:"states"})
+		.addMenuOption("mainMenu",{title:"fileReader",action:"fileReader"})
+		.addMenuOption("mainMenu",{title:"subMenu",action:"folder",passing:{menu:"subMenu"}})
+		.addMenu({id:"subMenu"})
+		.addMenuOption("subMenu",{action:"testAction3"})
+		.addMenuOption("subMenu",{action:"floatPane"})
+		.addMenuOption("subMenu",{title:"States 2",action:"states"})
+		.addMenuOption("subMenu",{title:"SVG 2",action:"svg"})
+		.addAction({id:"fileReader",type:"fileReader",passing:"c:/tmp/"})
+		.addAction({id:"testAction1",title:"Prib",type:"link",url:"https://www.linkedin.com/in/peter-prib-98214211/",target:"main"})
+		.addAction({id:"testAction2",title:"Test Pane",type:"pane",pane:"testPane"})
+		.addAction({id:"testAction3",title:"Test Pane closable",type:"pane",pane:"testPane2"})
+		.addAction({id:"floatPane",title:"Floating Pane",type:"floatingPane",pane:"floatPane"
+			,passing:{message:"These float"}})
+		.addAction({id:"googleMap",title:"Google Map",type:"googleMap",pane:"testPane"})
+		.addAction({id:"states",title:"States",type:"states"
+			,passing:[{image:"folderOpen"},{image:"loadingPage"},{image:"folderClose"}]
+			})
+	.build();
+	console.log("rendering completed");
+}
+	</script>
+<body class="IRender">
+</body>
+</html>

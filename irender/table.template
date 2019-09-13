@@ -1,0 +1,15 @@
+ <div id="{{id}}">Loading ITableDataRender</div>
+<script>
+try {
+    new ITableDataRender("{{id}}}","/{{{actionURL}}");
+} catch(e) {
+    let thisObject=this,e=document.createElement("script");
+	e.type="application/javascript";
+	e.src = "/{{baseURL}}/initialise"
+	e.onload = function () {
+        document.getElementById("{{id}}}").innerText="Loaded {{baseURL}}/initialise";
+	    new ITableDataRender("{{id}}}","/{{{actionURL}}}");   
+	}
+    document.getElementsByTagName("head")[0].appendChild(e);
+}
+</script>

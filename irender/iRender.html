@@ -1,0 +1,45 @@
+<script type="text/x-red" data-help-name="iRender">
+    <p>
+    </p>
+</script>
+
+<script type="text/x-red" data-template-name="iRender">
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name </label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+
+    <div class="form-row">
+    	<label for="node-input-url"><i class="fa fa-list-ul"></i> url </label>
+    	<input type="text" id="node-input-url">
+  	</div>
+  	
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('iRender',{
+    	category: 'function',
+        defaults: {
+            name: {value:"",required:false},
+            url: {value:"",required:true}
+        },
+	    inputs:1,
+        inputLabels: "",
+        outputs:0,
+        outputLabels: [],
+        icon: "setting.png",
+        label: function() {
+            return this.name||this.url;
+        },
+        labelStyle: function() {
+            return "node_label_italic";
+        },
+        oneditprepare: function() {
+        },
+        oneditsave: function() {
+        },
+        oneditresize: function(size) {
+        }
+    });
+</script>
