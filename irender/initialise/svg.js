@@ -184,13 +184,13 @@ Svg.prototype.createFloat = function (title) {
 			.input({title:"Fill Opacity",type:"range",min:0,max:100,},"fill-opacity") 
 			.input({title:"",type:"button",value:"Insert"
 					,onclick: function(ev) {
-							this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign(this.getMapping(),shapes[this.shape]));
+							this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign({},shapes[this.shape],this.getMapping()));
 							this.parent.close();
 						}
 					},null,["insert"])
 			.input({title:"",type:"button",value:"Update"
 					,onclick: function(ev) {
-//							this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign(this.getMapping(),shapes[this.shape]));
+//							this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign(Object.assign({},shapes[this.shape],this.getMapping());
 							this.parent.close();
 						}
 					},null,["update"])

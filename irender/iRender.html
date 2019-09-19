@@ -14,6 +14,29 @@
     	<label for="node-input-url"><i class="fa fa-list-ul"></i> url </label>
     	<input type="text" id="node-input-url">
   	</div>
+
+    <div class="form-row">
+        <label for="node-input-title"><i class="fa fa-tag"></i> Title </label>
+        <input type="text" id="node-input-title" placeholder="Name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-footer"><i class="fa fa-tag"></i> Footer </label>
+        <input type="text" id="node-input-footer" placeholder="Name">
+    </div>
+ 
+     <div class="form-row" style="margin-bottom: 0px;">
+        <label for="" style="width: unset;" id="node-input-definition-label"><i class="fa fa-edit"></i> Definition</label>
+    </div>
+    
+    <div>
+        <input type="hidden" id="node-input-definition" autofocus="autofocus">
+        <input type="hidden" id="node-input-noerr">
+    </div>
+
+    <div class="form-row node-text-editor-row">
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-definition-editor" ></div>
+    </div>
   	
 </script>
 
@@ -22,7 +45,11 @@
     	category: 'function',
         defaults: {
             name: {value:"",required:false},
-            url: {value:"",required:true}
+            url: {value:"",required:true},
+            title: {value:"",required:false}, 
+ 			footer: {value:"",required:false},
+ 			definition: {value:"",required:false},
+ 			noerr: {value:0,required:true,validate:function(v) { return !v; }}
         },
 	    inputs:1,
         inputLabels: "",
@@ -36,10 +63,78 @@
             return "node_label_italic";
         },
         oneditprepare: function() {
+            let ace = this;
+            this.editor = RED.editor.createEditor({
+                id: 'node-input-definition-editor',
+                mode: 'ace/mode/javascript',
+                value: $("#node-input-definition").val(),
+                globals: {
+                    msg:true,
+                    context:true,
+                    RED: true,
+                    util: true,
+                    flow: true,
+                    global: true,
+                    console: true,
+                    Buffer: true,
+                    setTimeout: true,
+                    clearTimeout: true,
+                    setInterval: true,
+                    clearInterval: true
+                }
+            });
+           	this.editor.getSession().on('change', function() {
+	            $("#node-input-definition").val(ace.editor.getValue());
+	            $("#node-input-definition").change();
+			});
+            
+            $("#node-input-definition-label").click(function(e) {
+                e.preventDefault();
+                var value = ace.editor.getValue();
+                RED.editor.editJavaScript({
+                    value: value,
+                    width: "Infinity",
+                    cursor: ace.editor.getCursorPosition(),
+                    mode: "ace/mode/javascript",
+                    complete: function(v,cursor) {
+                        ace.editor.setValue(v, -1);
+                        ace.editor.gotoLine(cursor.row+1,cursor.column,false);
+                        setTimeout(function() {
+                            ace.editor.focus();
+                        },300);
+                    }
+                })
+            })
         },
         oneditsave: function() {
+            let annot = this.editor.getSession().getAnnotations();
+            this.noerr = 0;
+            $("#node-input-noerr").val(0);
+            for (var k=0; k < annot.length; k++) {
+                if (annot[k].type === "error") {
+                    $("#node-input-noerr").val(annot.length);
+                    this.noerr = annot.length;
+                }
+            }
+        
+            $("#node-input-definition").val(this.editor.getValue());
+            this.editor.destroy();
+            delete this.editor;
+        },
+        oneditcancel: function() {
+            this.editor.destroy();
+            delete this.editor;
         },
         oneditresize: function(size) {
+            var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+            var height = $("#dialog-form").height();
+            for (var i=0; i<rows.size(); i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-text-editor-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $(".node-text-editor").css("height",height+"px");
+            if(this.editor) this.editor.resize();
         }
     });
 </script>

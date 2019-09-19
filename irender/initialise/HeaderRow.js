@@ -1,4 +1,7 @@
 function HeaderRow(base,headerProperties,parentElement,options) {
+	if(!(headerProperties.right || headerProperties.title || headerProperties.closable ) ) {
+		return;
+	}
 	this.base=base;
 	this.parent=parentElement;
 	Object.assign(this,options,headerProperties);

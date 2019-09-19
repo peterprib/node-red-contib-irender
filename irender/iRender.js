@@ -23,7 +23,7 @@ const fs=require('fs'),
 	initialPath=path.join(__dirname,"initialise"),
 	cookieParser = require("cookie-parser"),
 	express=require("express");
-let initial="",isSetup;
+let initial="",isSetup,urls={};
 debug({label:"initialise: ",files:initialPath});
 
 fs.readdirSync(path.join(__dirname,"initialise")).forEach(filename => {
@@ -33,6 +33,12 @@ fs.readdirSync(path.join(__dirname,"initialise")).forEach(filename => {
 
 function setUpURL(RED,node,data,type,id) {
 	const url="/"+nodeLabel+"/"+(id||"initialise");
+	if(id in urls) {
+		node.log("override url "+url);
+		urls[id]=data;
+		return;
+	}
+	urls[id]=data;
 	node.log("establish url "+url);
 	RED.httpNode.get(url,
 			cookieParser(),
@@ -41,7 +47,7 @@ function setUpURL(RED,node,data,type,id) {
 			(req,res,next)=>{ next(); }, // metricsHandler,
 			(req,res)=>{  //callback
 				res.setHeader("Content-Type", type||"text/javascript");
-				res.write(data);
+				res.write(urls[id]);
 				res.statusCode = 200;
 				res.end()
 			},
@@ -57,13 +63,14 @@ module.exports = function (RED) {
     function redNode(config) {
         RED.nodes.createNode(this, config);
         let node=Object.assign(this,config);
+        node.baseURL=nodeLabel;
         if(!isSetup) {
         	isSetup=true;
         	setUpURL(RED,node,initial);
         	node.log("establish url "+"/"+nodeLabel+"/images");
         	RED.httpNode.use("/"+nodeLabel+"/images",express.static(path.join(__dirname, 'images')));
         }
-        const mainWindow = mustache.render(windowTemplate.toString(), {baseURL:nodeLabel,title:"iRender",footer:"iRender by Peter Prib"});
+        const mainWindow = mustache.render(windowTemplate.toString(), node);
         setUpURL(RED,node,mainWindow,"text/HTML","index");
         
     }

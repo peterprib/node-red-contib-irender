@@ -1,4 +1,5 @@
 function IRenderClass(n) {
+	this.id=n;
     this.styleSheet = document.getElementById(n||"IRenderCSS");
     if (this.styleSheet===null) this.CreateStyleSheet(n);
 }
@@ -34,7 +35,7 @@ IRenderClass.prototype.CreateStyleSheet = function (n) {
 			+"overflow: auto; z-index:99999; background-color:#FFFFFF; border: 1px solid #a4a4a4;")
 	this.add("resizeVertical:hover","cursor: ew-resize;");
    	this.add("Tab","height: 20px; float: left; border: medium solid LightGrey; border-top-left-radius: 5px; border-top-right-radius: 10px;");
-   	this.add("TabDetail","");
+   	this.add("TabDetail","height: 100%; width: 100%; vertical-align:top ;");
 	this.add("TabPaneCell","border-top-style: solid; border-top-color: LightGrey;");
    	this.add("FullLeft","display: inline-block; height: 100%; width: 100%; background-color: white;");
    	this.add("Table","display: table; height: 100%; width: 100%; border-spacing: 0px;");
@@ -42,7 +43,8 @@ IRenderClass.prototype.CreateStyleSheet = function (n) {
    	this.add("TableRow","display: table-row;");
    	this.setHTMLBody("height: 100%; width: 100%; margin: 0px 0px 0px 0px; overflow: hidden;");
 };
-IRenderClass.prototype.add = function (name,rules) { 
+IRenderClass.prototype.add = function (name,rules) {
+		if(!this.rule) this.rule=this.styleSheet.sheet.insertRule?this.cssInsertRule:this.cssAddRule;
   		this.rule.call(this,name,rules);
   		return this;
 	};
@@ -52,19 +54,19 @@ IRenderClass.prototype.createElement = function (n,t,c) {
 		return e;
 	};
 IRenderClass.prototype.cssInsertRule = function (name,rules) {
-	   this.styleSheet.sheet.insertRule('.IRender'+name+"{"+rules+"}",0);
+	   this.styleSheet.sheet.insertRule('.IRender'+this.id+name+"{"+rules+"}",0);
 	   return this;
     };
 IRenderClass.prototype.cssAddRule = function (name,rules) {
-	   this.styleSheet.sheet.addRule('.IRender'+name, rules);
+	   this.styleSheet.sheet.addRule('.IRender'+this.id+name, rules);
 	   return this;
     };
 IRenderClass.prototype.setClass = function (n,name) {
-		n.className="IRender"+name;
+		n.className="IRender"+this.id+name;
 		return n;
 	};
 IRenderClass.prototype.addClass = function (n,name) {
-		n.classList.add("IRender"+name);
+		n.classList.add("IRender"+this.id+name);
 		return n;
 	};
 IRenderClass.prototype.setHTMLBody = function (r) {
@@ -75,7 +77,7 @@ IRenderClass.prototype.setHTMLBody = function (r) {
 		}
 	};
 IRenderClass.prototype.removeClass = function (n,name) {
-		n.classList.remove("IRender"+name);
+		n.classList.remove("IRender"+this.id+name);
 		return n;
 	};
 IRenderClass.prototype.replaceClass = function (n,name) {

@@ -1,7 +1,7 @@
-function MenuOption(b,p,parent) {
-	this.base=b;
+function MenuOption(base,p,parent) {
+	this.base=base;
 	Object.assign(this,p);
-	this.actionObject=this.base.actions[this.action]||this.base.actions.actionNotDefined;
+	this.actionObject=this.base.actions[this.executeAction]||this.base.actions.actionNotDefined;
 	this.element=createElement("TR","MenuOption",parent);
 	this.parent=parent;
 	this.expandCell=createElement("TD",null,this.element);
@@ -9,7 +9,7 @@ function MenuOption(b,p,parent) {
 	this.textCell=createElement("TD",null,this.element);
 	this.element.iRender= p;
 	this.element.addEventListener('click', this.onclick.bind(this), false);
-	switch(p.action) {
+	switch(p.executeAction) {
 		case "folder":
 			this.setCollapsed();
 			break;
@@ -18,16 +18,20 @@ function MenuOption(b,p,parent) {
 			this.iconCell.appendChild(this.base.getImage(this.actionObject.passing[0].image));
 			break;
 		default:
-			this.iconCell.appendChild(b.getImage(coalesce(p.image,"file")));
+			this.iconCell.appendChild(this.base.getImage(coalesce(p.image,"file")));
 	}
 	this.textA=createElement("a","MenuText",this.textCell);
 	this.textA.innerText=coalesce(this.title,(this.actionObject?this.actionObject.title:null),"*** no title specifed *** ");
 	this.properties=p;
 }
 MenuOption.prototype.nextState = function (a) {
-		this.iconCell.removeChild(this.iconCell.firstChild);
+		if(this.iconCell.firstChild) this.iconCell.removeChild(this.iconCell.firstChild);
 		if(++this.state>=a.passing.length) this.state=0;
-		this.iconCell.appendChild(this.base.getImage(a.passing[this.state].image));
+		let state=a.passing[this.state];
+		this.iconCell.appendChild(this.base.getImage(state.image));
+		if(state.call) {
+			state.call.apply(state.object||state,state.parameters);
+		}
 	};
 MenuOption.prototype.isExpanded = function () {
 		return (this.expandCell.innerText=="-");

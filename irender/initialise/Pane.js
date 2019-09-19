@@ -1,20 +1,24 @@
-function Pane(base,paneProperties,parentElememt,target,action) {
+function Pane(base,paneProperties={},parentElement,target,action) {
 	this.base=base;
-	this.parent=parentElememt;
+	this.parent=parentElement;
 	Object.assign(this,paneProperties);
 	this.element=css.setClass(createTable(),"Table");
 	this.element.IRender=this;
-	var header=Object.assign({},paneProperties.header,{closable:paneProperties.closable ,title:paneProperties.title,pane:this});
+	let header=Object.assign({},paneProperties.header||{},{closable:paneProperties.closable ,title:paneProperties.title,pane:this});
 	if(header) this.headerRow=new HeaderRow(base,header,this.element,{style:"Header"});
 	this.centerRow=new CenterRow(this,base,paneProperties,this.element);
 	if(paneProperties.hasOwnProperty("footer")) this.footerRow=new FooterRow(base,paneProperties,this.element,{style:"Footer"});
-	if(parentElememt) parentElememt.appendChild(this.element);
+	if(parentElement) parentElement.appendChild(this.element);
 	if(paneProperties.hasOwnProperty("content")) this.centerRow.content(paneProperties.content);
 //	this.onCloseHide=p.onCloseHide||false;
 	if(this.onCloseHide) {
 		if(action) {
-			if(!t.hasOwnProperty('dependants')) t.dependants=[];
-			t.dependants[action.id]=this;
+			if(target) {
+				if(!target.hasOwnProperty('dependants'))target.dependants=[];
+				t.dependants[action.id]=this;
+			} else {
+				console.error("expecting target for action "+action.id+" and none found")
+			}
 		} else
 			this.onCloseHide=false;
 	}

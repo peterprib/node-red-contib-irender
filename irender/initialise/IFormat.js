@@ -1,11 +1,18 @@
 /*
  * [{column:0,format:afunction,title:"a col"},...]
  */
-function IFormat() {
-	this.arguments=arguments;
+function IFormat(options) {
+	Object.assign(this,{format:"auto"},options);
+	this.formatter=this[this.format];
 	return this;
 }
-
+IFormat.prototype.toHTML = function () {
+		return document.createTextNode(this.formatter.apply(this,arguments));
+};
+IFormat.prototype.auto = function (v) {
+	this.formatter=IFormat.prototype.copy;
+	return this.formatter.apply(this,arguments);
+};
 IFormat.prototype.copy = function (v) {
 		return v;
 };
@@ -15,7 +22,7 @@ IFormat.prototype.getStringAfterDelimiter = function (v) {
 	return getStringAfterDelimiter(v,wordPosition,delimiter);
 };
 IFormat.prototype.regexp = function (v) {
-	return v.split(regPattern,1)[0];
+	return v.split(this.regPattern,1)[0];
 };
 IFormat.prototype.substr = function (v) {
 	if(isNaN(stringLength))
@@ -110,7 +117,7 @@ IFormat.prototype.toBoolean = function (v) {
 	return v=="t"||v=="1"||v==1?"True":'False';
 };
 IFormat.prototype.normalize = function (v) {
-	return (normalizer==0 ? null : v/normalizer);
+	return (this.normalizer==0 ? null : v/this.normalizer);
 };
 IFormat.prototype.percent = function (v) {
 	return 100*this.normalize(v);

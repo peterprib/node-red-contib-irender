@@ -90,6 +90,12 @@ Action.prototype.exec_pane = function (e) {
 		e.setDetail(this.title,p.element);
 		if(this.setDetail) this.setDetail.apply(e,[p]);
 	};
+Action.prototype.exec_table = function (e) {
+		const t=css.setClass(document.createElement("DIV"),"FullSize");
+		new ITableDataRender(t,e.passing.url||this.url)
+		e.setDetail(e.title||this.title,t);
+		if(this.setDetail) this.setDetail.apply(e,[p]);
+	};
 Action.prototype.exec_states = function (e) {
 		e.nextState(this);
 	};

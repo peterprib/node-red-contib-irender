@@ -1,8 +1,8 @@
-function ITableDataRender(element,urlData,md,mp,d) {
-	this.element=document.getElementById(element)
+function ITableDataRender(element,urlData,md,mp,data) {
+	this.element=typeof element =="string"?document.getElementById(element):element;
 	if(md) {this.setMetaData(md);}
 	if(mp) {this.setMapping(mp);}
-	this.data=d||[];
+	this.data=data||[];
 	this.element.innerText=null;
 	this.setLoading();  
 	this.css=new IRenderClass("ITableCSS")
@@ -25,81 +25,15 @@ function ITableDataRender(element,urlData,md,mp,d) {
 	}
 	return this;
 };
-ITableDataRender.prototype.setLoading = function () {
-    this.element.appendChild(document.createTextNode("Loading "));
+ITableDataRender.prototype.appendTo = function (n) {
+	document.getElementById(n).appendChild(this.getHTMLTable());
+	return this;
 };
 ITableDataRender.prototype.clearPane = function () {
 	while (this.element.firstChild) {
 		//The list is LIVE so it will re-index each call
 		this.element.removeChild(this.element.firstChild);
 	}
-};
-ITableDataRender.prototype.processData = function (data) {
-    Object.assign(this,JSON.parse(data));
-    this.setMetaData(this.structure);
-    this.setMapping(this.structure);
-    var t=this.getHTMLTable();
-    this.clearPane();
-    this.element.appendChild(t);
-};
-ITableDataRender.prototype.error = function (err) {
-    console.warn(err);
-    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
-
-};
-ITableDataRender.prototype.getData = function (url) {
-    if((url||"")=="/") throw Error("url not specified");
-    var base=this, httpRequest= new XMLHttpRequest();
-    httpRequest.timeout = 10000; // time in milliseconds
-    //httpRequest.ontimeout = function (e) {
-        // XMLHttpRequest timed out. Do something here.
-    //};
-
-    httpRequest.onreadystatechange = function () {
-        try {
-            if (this.readyState === XMLHttpRequest.DONE) {
-                if (this.status === 200) {
-                    base.processData(this.responseText);
-                } else {
-                    base.error('There was a problem with the get data request, status: '+this.status);
-                }
-            }
-        } catch( e ) {
-            console.warn(e);
-            base.error('Caught Exception: ' + e.message + ' url:'+ url + ' data:'+this.responseText.substr(0,20));
-        }
-    };
-    httpRequest.open('GET', url);
-    httpRequest.send();
-}
-ITableDataRender.prototype.setMetaData = function (md) {
-	this.metaData=md;
-	this.columns={};
-	for(var n,i=0;i<md.length;i++) {
-		n=md[i].name||md[i].column;
-		if(md[i].title==null) md[i].title=n;
-		this.columns[n]=Object.assign({offset:i},md[i]);
-	}
-	return this;
-};
-
-ITableDataRender.prototype.setMapping = function (m) {
-		this.mapping=[];
-		for(var c,i=0;i<m.length;i++) {
-			c=m[i];
-			var offset=typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1;
-			this.mapping.push( {format:(new IFormat()),offset:offset} );
-		}
-		return this;
-	};
-ITableDataRender.prototype.transform = function (d) {
-	var o;
-	for(var dl=d.length,i=0; i<dl ;i++) {
-		for(var ml=this.mapping.length,m=0; m<ml; m++) {
-			o+=this.mapping[m].format(d[this.mapping[m].column])																										;
-		}
-	}
-	return o;
 };
 ITableDataRender.prototype.contextmenu = function (ev) {
 	ev.preventDefault();
@@ -108,7 +42,7 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 		delete this.dataMenu;
 	}
 	this.dataMenu=new IContextMenu();
-	var row=ev.target.parentNode.rowIndex,
+	let row=ev.target.parentNode.rowIndex,
 		cell=ev.target.cellIndex;
 	if(row==0) { // Header row
 		this.dataMenu.add("Unhide all",this.unhideRowAll,[],this);
@@ -118,16 +52,13 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 	}
 	this.dataMenu.positionAbsolute({y:ev.pageY,x:ev.pageX});
 };
-ITableDataRender.prototype.appendTo = function (n) {
-	document.getElementById(n).appendChild(this.getHTMLTable());
-	return this;
-};
+
 ITableDataRender.prototype.displayRow = function (ev,r) {
 	if(!this.displayRowForm) {
 		this.displayRowForm = new IForm(this,null,"Row")
 				.setRemove(this.displayRowRemove.bind(this))
 				.positionAbsolute({y:ev.pageY,x:ev.pageX});
-		for(var d,t,ml=this.mapping.length,m=0; m<ml; m++) { //columns
+		for(let d,t,ml=this.mapping.length,m=0; m<ml; m++) { //columns
 			mp=this.mapping[m];
 			md=this.metaData[mp.offset];
 			d=this.data[r][mp.offset];
@@ -140,7 +71,7 @@ ITableDataRender.prototype.displayRow = function (ev,r) {
 					break;
 				case 'varchar':
 					if(d) {
-						var rows=d.search(/\n/g); // count newlines
+						let rows=d.search(/\n/g); // count newlines
 					}
 					if(rows>0) {
 						t={action:"textarea", cols:100, rows:Math.min(rows+1,10), maxsize:md.typelen };
@@ -165,35 +96,118 @@ ITableDataRender.prototype.displayRow = function (ev,r) {
 ITableDataRender.prototype.displayRowRemove = function () {
 	delete this.displayRowForm;
 };
-ITableDataRender.prototype.hideRow = function (ev,r) {
-	this.tbody.childNodes[r].style.display="none";
+ITableDataRender.prototype.error = function (err) {
+    console.warn(err);
+    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
+
 };
-ITableDataRender.prototype.unhideRowAll = function (ev) {
-	for(var r=0;r<this.tbody.childNodes[0].childElementCount;r++) {
-		this.tbody.childNodes[r].style.display="";
-	}
-};
+
+ITableDataRender.prototype.getData = function (url) {
+    if((url||"")=="/") throw Error("url not specified");
+    let base=this, httpRequest= new XMLHttpRequest();
+    httpRequest.timeout = 10000; // time in milliseconds
+    //httpRequest.ontimeout = function (e) {
+        // XMLHttpRequest timed out. Do something here.
+    //};
+
+    httpRequest.onreadystatechange = function () {
+        try {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    base.processData(this.responseText);
+                } else {
+                    base.error('There was a problem with the get data request url:'+ url + ', status: '+this.status);
+                }
+            }
+        } catch( e ) {
+            console.warn(e);
+            base.error('Caught Exception: ' + e.message + ' url:'+ url + ' data:'+this.responseText.substr(0,20));
+        }
+    };
+    httpRequest.open('GET', url);
+    httpRequest.send();
+}
 ITableDataRender.prototype.getHTMLTable = function () {
-	var mp,md,r,
+	let mp,md,r,
 		t=this.css.createElement(null,"TABLE","Table");
 
 	this.tbody=this.css.createElement(t,"TBODY","TableBody");
 	tHeadRow=this.css.createElement(this.tbody,"TR");
 	t.addEventListener('contextmenu', this.contextmenu.bind(this), false);
 	this.css.createElement(tHeadRow,"TD","Cell0");
-	
-	for(var dl=this.data.length,i=0; i<dl ;i++) {  // define all row label cells
+	let dl=this.data.length;
+	for(let i=0; i<dl ;i++) {  // define all row label cells
 		const r=this.css.createElement(this.tbody,"TR");
 		this.css.createElement(r,"TD","Left");
 	}
-	for(var ml=this.mapping.length,m=0; m<ml; m++) { //columns
+	this.clearPane();
+    this.element.appendChild(t);
+	
+	for(let ml=this.mapping.length,m=0; m<ml; m++) { //columns
 		mp=this.mapping[m];
 		md=this.metaData[mp.offset];
 		this.css.createElement(tHeadRow,"TD","Head").appendChild(document.createTextNode(md.title));
-		for(var i=0; i<dl ;i++) {
+		for(let i=0; i<dl ;i++) {
 			r=this.tbody.rows[i+1];
-			this.css.createElement(r,"TD","Cell").appendChild(document.createTextNode(this.data[i][mp.offset]));
+			this.css.createElement(r,"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
 		}
 	}
+	
 	return t;
+};
+ITableDataRender.prototype.hideRow = function (ev,r) {
+	this.tbody.childNodes[r].style.display="none";
+};
+ITableDataRender.prototype.processData = function (data) {
+    Object.assign(this,JSON.parse(data));
+    if(!this.metaData) {
+        this.setMetaData(this.structure);
+        this.setMapping(this.structure);
+    }
+    this.getHTMLTable();
+};
+ITableDataRender.prototype.setLoading = function () {
+    this.element.appendChild(document.createTextNode("Loading "));
+};
+ITableDataRender.prototype.setMetaData = function (md) {
+	this.metaData=md;
+	this.columns={};
+	for(let n,i=0;i<md.length;i++) {
+		if(md[i].name) {
+			n=md[i].name;
+			if(!md[i].column) md[i].column=n
+		} else if(md[i].column) {
+			n=md[i].column;
+			md[i].name=n;
+		} else {
+			n="col"+(i+1);
+			md[i].name=n;
+			md[i].column=n;
+		}
+		if(!md[i].title) md[i].title=n;
+		this.columns[n]=Object.assign({offset:i},md[i]);
+	}
+	return this;
+};
+ITableDataRender.prototype.setMapping = function (m) {
+		this.mapping=[];
+		for(let c,i=0;i<m.length;i++) {
+			c=m[i];
+			let offset=typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1;
+			this.mapping.push( {format:(new IFormat(c)),offset:offset} );
+		}
+		return this;
+	};
+ITableDataRender.prototype.transform = function (d) {
+	for(let o, dl=d.length,i=0; i<dl ;i++) {
+		for(let ml=this.mapping.length,m=0; m<ml; m++) {
+			o+=this.mapping[m].format.formatter(d[this.mapping[m].column])																										;
+		}
+	}
+	return o;
+};
+ITableDataRender.prototype.unhideRowAll = function (ev) {
+	for(let r=0;r<this.tbody.childNodes[0].childElementCount;r++) {
+		this.tbody.childNodes[r].style.display="";
+	}
 };

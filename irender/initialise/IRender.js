@@ -1,4 +1,3 @@
-
 function PaneRow(b,p,n) {
 	this.element=css.setClass(document.createElement("TR"),"TableRow");
 	n.appendChild(this.element);
@@ -6,111 +5,7 @@ function PaneRow(b,p,n) {
 	this.centerCell=new Pane(b,p,n);
 	this.element.appendChild(this.centerCell.element);
 }
-function TabPane(b,p,parent) {
-	this.base=b;
-	this.element=parent;
-	this.tabs=createTable();
-	this.tabsRow=createTableRow(this.tabs);
-	this.panes=css.setClass(createTable(),"Table");
-	this.panesRow=css.setClass(createTableRow(this.panes),"Row");
-	this.table=css.setClass(createTable(2,1),"Table");
-	this.table.rows[0].style.height="30px";
-	this.tabsHide();
-	this.table.rows[0].cells[0].appendChild(this.tabs);
-	this.table.rows[1].cells[0].appendChild(this.panes);
-	css.setClass(this.table.rows[1].cells[0],"TabPaneCell");
-	this.element.appendChild(this.table);
-}
-TabPane.prototype.close = function () {
-	while(this.tabsRow.cells.length>0) {
-		this.closeTab(0);
-	}
-}
-TabPane.prototype.closeTabTitle = function (t) {
-		this.closeTab(this.find(t));
-}
-TabPane.prototype.closeTab = function (i) {
-		this.activeTab=null;
-		try{
-			this.panesRow.cells[i].firstChild.IRender.close();
-		} catch(e) {}
-		this.panesRow.deleteCell(i);
-		this.tabsRow.deleteCell(i);
-		if(this.tabsRow.cells.length<1) return;
-		if(i>=this.tabsRow.cells.length) i--;
-		this.setCurrent(i);
-	};
-TabPane.prototype.onclick = function (ev) {
-	this.hideCurrent();
-	this.setCurrent(ev.currentTarget.cellIndex);
-};
-TabPane.prototype.onclickClose = function (ev) {
-	ev.stopPropagation();
-	this.closeTabTitle(ev.currentTarget.parentElement.innerText); //ev.currentTarget.cellIndex||
-};
-TabPane.prototype.setCurrent = function (i) {
-	if(i<0) {
-		this.activeTab=null;
-		return;
-	}
-	this.panesRow.cells[i].style.display = 'table-cell';
-	this.tabsRow.cells[i].style.backgroundColor="LightGrey";
-	this.activeTab=i;
-};
-TabPane.prototype.hideCurrent = function (e) {
-		try{
-			this.panesRow.cells[this.activeTab].style.display = 'none';
-			this.tabsRow.cells[this.activeTab].style.backgroundColor="";
-			this.panesRow.cells[this.activeTab].firstChild.IRender.closeDependants();
-		} catch(e) {}
-		this.activeTab=null;
-	};
-TabPane.prototype.setFullSize = function (n) {
-		var c=this.panesRow.cells[this.activeTab];
-		if(n==undefined) {
-			n=c.lastChild;
-		}
-		n.style.width=c.clientWidth+"px";
-		n.style.height=c.clientHeight+"px";
-		return this;
-	};
-TabPane.prototype.find = function (t,f) {
-		for(var i=0; i<this.tabsRow.cells.length;i++ ) {
-			if(this.tabsRow.cells[i].firstChild.innerText==t) return i
-		}
-		return null
-	};
-TabPane.prototype.setDetail = function (t,n) {
-		this.hideCurrent();
-		var i=this.find(t);
-		if(i!==null) {
-			this.activeTab=i;
-			while (this.panesRow.cells[i].firstChild) {
-				this.panesRow.cells[i].removeChild(this.panesRow.cells[i].firstChild);
-			}
-			this.panesRow.cells[i].appendChild(n);
-			this.setCurrent(i);
-			return this;
-		}
-		var ct=css.setClass(createTableCell(this.tabsRow),"Tab")
-			,cp=css.setClass(createTableCell(this.panesRow),"TabDetail");
-		ct.addEventListener('click', this.onclick.bind(this), false);	
-		var ctt=createElement("a","MenuText",ct);
-		ctt.innerText=t;
-		addCloseIcon(this,ct);
-		this.setCurrent(this.tabsRow.cells.length-1);
-		n.iRender={tabPane:this,title:t};
-		cp.appendChild(n);
-		if(this.tabsRow.cells.length>1) this.tabsUnhide();
-		n.IRenderTab=ct;
-		return this;
-	};
-TabPane.prototype.tabsHide = function () {
-		this.table.rows[0].style.display="none";
-	};
-TabPane.prototype.tabsUnhide = function () {
-		this.table.rows[0].style.display="table-row";;
-	};
+
 function Text(t) {
 	var n=document.createElement("a");
 	n.innerText=t;
@@ -161,14 +56,14 @@ function Cell(row) {
 	row.appendCell(this);
 	return this;
 }
-function Window (b,p,n) {
+function Window (base,p,n) {
 	this.element=css.setClass(createTable(),"Table");
 	if(p.title) document.title=p.title;
-	this.headerRow=new HeaderRow(b,p,this.element,{style:"HeaderMain"});
-	this.centerRow=new PaneRow(b,b.panes[p.pane],this.element);	
-	this.footerRow=new FooterRow(b,p,this.element,{style:"FooterMain"});
+	this.headerRow=new HeaderRow(base,p,this.element,{style:"HeaderMain"});
+	this.centerRow=new PaneRow(base,base.panes[p.pane],this.element);	
+	if(p.footer) this.footerRow=new FooterRow(base,p,this.element,{style:"FooterMain"});
 	n.append(this.element);
-	b.floatHandle=n;
+	base.floatHandle=n;
 }	
 Window.prototype.sizeCenter = function () {
 		// rect is a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
@@ -183,12 +78,12 @@ function IRender() {
 	this.actions={folder:{type:"folder"}};
 	this.guid=0;
 	this.metadata = {
-			action: {id:null,type:["link","pane","svg","googleMap"],url:null,title:null,target:null,pane:null,passing:null,setDetail:null}
-			,image: {id:null ,file:null}
-			,menu: {id:null ,options:{"default":Array.constructor}}
-			,menuOption: {title:null ,action:null ,passing:null}
-			,pane: {id:null ,title:null, leftMenu:null,show:null ,closable:null, onCloseHide:null ,header:null ,footer:null, content:null}
-			,window: {title:{"default":"No Title Specified"},footer:{"default":"No Footer Specified"},pane:null}
+			action: {action:null,id:null,type:["link","pane","table","svg","googleMap"],url:null,title:null,target:null,pane:null,passing:null,setDetail:null}
+			,image: {action:null,id:null ,file:null}
+			,menu: {action:null,id:null ,options:{"default":Array.constructor}}
+			,menuOption: {action:null,menu:null,title:null ,executeAction:null ,passing:null}
+			,pane: {action:null,id:null ,title:null, leftMenu:null,show:null ,closable:null, onCloseHide:null ,header:null ,footer:null, content:null}
+			,window: {title:{"default":"No Title Specified"},leftMenu:null,footer:{"default":"No Footer Specified"},pane:null}
 		};
 	this.panes={};
 	this.window={};
@@ -216,6 +111,16 @@ IRender.prototype.getPane = function(n) {
 		if(n in this.panes)	return this.panes[n];
 		throw Error("Pane "+n+" not found");
 	};
+IRender.prototype.add = function(p) {
+		if(p) {
+			if(p instanceof Array) {
+				p.forEach((c)=>this[c.action](c));
+			} else {
+				this[p.action](p);
+			}
+		}
+		return this;
+	};
 IRender.prototype.addAction = function(p) {
 		this.checkProperties(p,"action");
 		this.actions[p.id]=new Action(this,p);
@@ -232,9 +137,11 @@ IRender.prototype.addMenu = function(p) {
 		return this;
 	};
 IRender.prototype.addMenuOption = function(m,p) {
-		this.checkProperties(p,"menuOption");
-		if(!(m in this.menus)) throw Error("menu not found for "+m)
-		this.menus[m].options.push(p);
+		let	properties=p?Object.assign({menu:m},p):m,
+			menu=properties.menu;
+		this.checkProperties(properties,"menuOption");
+		if(!(menu in this.menus)) throw Error("menu not found for "+menu);
+		this.menus[menu].options.push(properties);
 		return this;
 	};
 IRender.prototype.addPane = function(p) {
@@ -405,39 +312,39 @@ IRender.prototype.addSVG = function () {
 			})
 };
 IRender.prototype.addVis = function () {
-	this.addAction({id:"visConfiguration",title:"Vis Configuration",type:"floatingPane",pane:"visConfiguration"})
+	this.addPane({id:"vis",title:"vis"})
 	.addPane({id:"visConfiguration",title:"vis Configuration",onCloseHide:true})
+	.addAction({id:"visConfiguration",title:"Vis Configuration",type:"floatingPane",pane:"visConfiguration"})
 	.addAction({id:"vis",title:"vis",type:"pane",pane:"vis",
 		setDetail:function (p) {
-				var div=createDiv();
-				p.setDetail(div);
-				if(this.passing.config) {
-					var nc=createDiv();
-					nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
-					nc.style.overflow='auto';
-					var options= Object.assign({configure:{enabled:true,container: nc,showButton:true}},this.passing.options);
-					p.headerRow.addRight([{image:"edit",action:"visConfiguration"}]);
-					p.executeHeaderAction("visConfiguration").dependants.visConfiguration.setDetail(nc);
-				} else
-					var options=this.passing.options;
-				p.network = new vis[this.passing.module||"Network"](div,this.passing.dataset, options);
-			}
-	})
-	.addPane({id:"visInline",title:"vis",header:{right:[{image:"edit",action:"visConfiguration"}]}})
-	.addPane({id:"vis",title:"vis"});
-
-	this.addAction({id:"visInlineg2d",title:"vis",type:"pane",pane:"visInline",
-			setDetail:function (p) {
-				var div=createDiv();
-				p.setDetail(div);
-				var nc=createDiv();
+			let options,div=createDiv();
+			p.setDetail(div);
+			if(this.passing.config) {
+				let nc=createDiv();
 				nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
 				nc.style.overflow='auto';
+				options= Object.assign({configure:{enabled:true,container: nc,showButton:true}},this.passing.options);
+				p.headerRow.addRight([{image:"edit",action:"visConfiguration"}]);
 				p.executeHeaderAction("visConfiguration").dependants.visConfiguration.setDetail(nc);
-				var network = new vis.Graph2d(div, g2data,{ // need to convert to function which is passed to get data
-						configure:{enabled:true,container: nc}
-			});
+			} else {
+				options=this.passing.options;
 			}
-		})
+			p.network = new vis[this.passing.module||"Network"](div,this.passing.dataset, options);
+		}
+	})
+	.addPane({id:"visInline",title:"vis",header:{right:[{image:"edit",action:"visConfiguration"}]}})
+	.addAction({id:"visInlineg2d",title:"vis",type:"pane",pane:"visInline",
+		setDetail:function (p) {
+			let div=createDiv();
+			p.setDetail(div);
+			let nc=createDiv();
+			nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
+			nc.style.overflow='auto';
+			p.executeHeaderAction("visConfiguration").dependants.visConfiguration.setDetail(nc);
+			let network = new vis.Graph2d(div, this.passing.dataset,{ // need to convert to function which is passed to get data
+					configure:{enabled:true,container: nc}
+			});
+		}
+	})
 };
 
