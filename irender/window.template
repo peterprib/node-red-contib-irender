@@ -21,41 +21,10 @@ try {
 }
 	
 function render() {	
-let rendering=new IRender();
-rendering.setWindow({title:"{{title}}",footer:"{{footer}}",pane:"_main"})
+	let rendering=new IRender();
+	rendering.setWindow({title:"{{title}}",footer:"{{footer}}",pane:"_main"})
 	.add({{&definition}})
-/*		.addPane({id:"main",title:"Sub Test",leftMenu:"mainMenu",show:"Test Pane1"})
-		.addPane({id:"testPane",title:"Test Pane"})
-		.addPane({id:"testPane2",title:"Test Pane",closable:true})
-		.addPane({id:"floatPane",title:"Floating Pane"})
-		.addMenu({id:"mainMenu"})
-		.addMenuOption("mainMenu",{title:"Test Link",executeAction:"testAction1"})
-		.addMenuOption("mainMenu",{title:"Test Pane1",executeAction:"testAction2"})
-		.addMenuOption("mainMenu",{title:"Test Folder",executeAction:"folder",passing:{}})
-		.addMenuOption("mainMenu",{title:"test vis",executeAction:"vis",passing:{config:true,module:"Network",options:{},dataset:nodedata}})
-		.addMenuOption("mainMenu",{title:"test vis inline",executeAction:"visInline"});
-		.addMenuOption("mainMenu",{title:"test vis inline g2d",executeAction:"visInlineg2d"})
-		.addMenuOption("mainMenu",{title:"SVG",executeAction:"svg"})
-		.addMenuOption("mainMenu",{title:"Google Map",executeAction:"googleMap"})
-		.addMenuOption("mainMenu",{title:"States",executeAction:"states"})
-		.addMenuOption("mainMenu",{title:"fileReader",executeAction:"fileReader"})
-		.addMenuOption("mainMenu",{title:"subMenu",executeAction:"folder",passing:{menu:"subMenu"}})
-		.addMenu({id:"subMenu"})
-		.addMenuOption("subMenu",{executeAction:"testAction3"})
-		.addMenuOption("subMenu",{executeAction:"floatPane"})
-		.addMenuOption("subMenu",{title:"States 2",executeAction:"states"})
-		.addMenuOption("subMenu",{title:"SVG 2",executeAction:"svg"})
-		.addAction({id:"fileReader",type:"fileReader",passing:"c:/tmp/"})
-		.addAction({id:"testAction1",title:"Prib",type:"link",url:"https://www.linkedin.com/in/peter-prib-98214211/",target:"main"})
-		.addAction({id:"testAction2",title:"Test Pane",type:"pane",pane:"testPane"})
-		.addAction({id:"testAction3",title:"Test Pane closable",type:"pane",pane:"testPane2"})
-		.addAction({id:"floatPane",title:"Floating Pane",type:"floatingPane",pane:"floatPane"
-			,passing:{message:"These float"}})
-		.addAction({id:"googleMap",title:"Google Map",type:"googleMap",pane:"testPane"})
-		.addAction({id:"states",title:"States",type:"states"
-			,passing:[{image:"folderOpen"},{image:"loadingPage"},{image:"folderClose"}]
-			})
-*/	.build();
+	.build();
 	console.log("rendering completed");
 }
 	</script>

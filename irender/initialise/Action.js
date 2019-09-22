@@ -10,7 +10,7 @@ function Action (b,p) {
 };
 
 Action.prototype.exec_fileReader = function (e) {
-	    const thisObject=this
+	    const action=this
 	    	,request=new XMLHttpRequest();
 	    request.onreadystatechange= function() {
 	        if (request.readyState==4 && request.status==200) {
@@ -19,19 +19,13 @@ Action.prototype.exec_fileReader = function (e) {
 	        }
 	    }
 	    request.onerror = function(progress){
-	    	thisObject.setCatchError(e,new Error("Load failed, check log for details"));
+	    	action.setCatchError(e,new Error("Load failed, check log for details"));
 	    };
 	    request.open("GET", "file:"+this.passing);
 	    request.withCredentials = "true";
     	request.send();
 	};
 Action.prototype.exec_floatingPane = function (e,ev,p) {
-//	if(this.passing) {
-//		if(this.passing.target instanceof Object) {
-//			var target=this.passing.target;
-//		}
-//	}
-//	if(!target) var target=e.pane;
 	if(e.pane && e.pane.hasOwnProperty('dependants') && e.pane.dependants.hasOwnProperty(this.id)) {
 		e.pane.dependants[this.id].open();
 		return;
@@ -39,7 +33,7 @@ Action.prototype.exec_floatingPane = function (e,ev,p) {
 	new PaneFloat(this.base,
 		this.base.getPane(this.pane),  //paneProperties
 		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,p),  // options
-		(this.passing.target||e.getTarget?e.getTarget():null), //target
+		this.getTarget(e),
 		this  // action
 	);
 };
@@ -49,7 +43,65 @@ Action.prototype.exec_folder = function (e) {
 		} else {
 			e.setExpanded();
 		}
+};
+Action.prototype.exec_httpGet = function (e) {
+	let action=this,
+		httpRequest = new XMLHttpRequest();
+	if (!httpRequest) throw Error("Failed to get http request");
+/*
+	httpRequest.onreadystatechange = function() {
+		try{
+			if (httpRequest.readyState === XMLHttpRequest.DONE) {
+		        if (httpRequest.status === 200) {
+		        	action.setDetail(httpRequest.responseText);
+		        } else {
+		        	action.error.apply.('There was a problem with the request.');
+		        }
+		      }
+		}
 	};
+*/
+    request.onerror = function(progress){
+    	action.setCatchError(e,new Error("http get failed, check log for details"));
+    };
+/*   
+    httpRequest.addEventListener('loadstart', handleEvent);
+    httpRequest.addEventListener('load', handleEvent);
+    httpRequest.addEventListener('loadend', handleEvent);
+    httpRequest.addEventListener('progress', handleEvent);    // function (event) 
+    httpRequest.addEventListener('error', handleEvent);
+    httpRequest.addEventListener('abort', handleEvent);
+    httpRequest.addEventListener('timeout', handleEvent);
+*/   
+     
+	httpRequest.open('GET', this.url);
+	httpRequest.ontimeout = () => {
+	    console.error('Timeout!!')
+	};
+
+	
+/*
+XMLHttpRequest.onprogress = function (event) {
+  event.loaded;
+  event.total;
+};
+ */
+	httpRequest.timeout = action.timeout||10000; // time in milliseconds
+
+	httpRequest.onload = function () {
+		action.setDetail(httpRequest.responseText);
+	};
+
+	xhr.ontimeout = function (e) {
+		if(action.ontimeout) {
+			this.ontimout.apply(this.getTarget(e),[e]);
+			return;
+		}
+    	action.setCatchError(e,new Error("timed out, check log for details"));
+	};
+    request.withCredentials = "true";
+	httpRequest.send();
+};
 Action.prototype.exec_googleMap = function (e) {
 		try{
 		    const mapOption=coalesce(this.passing,{
@@ -90,12 +142,6 @@ Action.prototype.exec_pane = function (e) {
 		e.setDetail(this.title,p.element);
 		if(this.setDetail) this.setDetail.apply(e,[p]);
 	};
-Action.prototype.exec_table = function (e) {
-		const t=css.setClass(document.createElement("DIV"),"FullSize");
-		new ITableDataRender(t,e.passing.url||this.url)
-		e.setDetail(e.title||this.title,t);
-		if(this.setDetail) this.setDetail.apply(e,[p]);
-	};
 Action.prototype.exec_states = function (e) {
 		e.nextState(this);
 	};
@@ -108,6 +154,15 @@ Action.prototype.exec_svg = function (e) {
 		} catch(ex) {
 			this.setCatchError(e,ex);
 		}
+	};
+Action.prototype.exec_table = function (e) {
+		const t=css.setClass(document.createElement("DIV"),"FullSize");
+		new ITableDataRender(t,e.passing.url||this.url)
+		e.setDetail(e.title||this.title,t);
+		if(this.setDetail) this.setDetail.apply(e,[p]);
+	};
+Action.prototype.getTarget = function (e) {
+		return (this.target||this.passing.target||e.getTarget?e.getTarget():null)
 	};
 Action.prototype.iframeLoad = function (ev) {
 		if(ev.currentTarget.childElementCount>0) return;

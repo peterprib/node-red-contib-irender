@@ -28,19 +28,30 @@ HeaderRow.prototype.addRight = function (right) {
 		}
 	}
 };
-HeaderRow.prototype.executeAction = function (id) {	
-	this.executeActionCell(id,this.left);
-	this.executeActionCell(id,this.right);
+HeaderRow.prototype.executeAction = function (id) {
+	let n=this.getAction(id);
+	return n.iRenderAction.exec(this,
+			{	pageY:window.pageYOffset + n.getBoundingClientRect().top,
+				pageX:window.pageXOffset + n.getBoundingClientRect().left
+			});
 };
 HeaderRow.prototype.executeActionCell = function (id,c) {
 	for(var n,i=0;i<c.childNodes.length;i++) {
 		n=c.childNodes[i];
 		if(!n.hasOwnProperty('iRenderAction')) continue;
 		if(n.iRenderAction.id!=id) continue;
-		return n.iRenderAction.exec(this,
-			{	pageY:window.pageYOffset + n.getBoundingClientRect().top,
-				pageX:window.pageXOffset + n.getBoundingClientRect().left
-			});
+
+	}
+};
+HeaderRow.prototype.getAction = function (id) {
+	return this.getActionCell(id,this.left)||this.getActionCell(id,this.right);
+};
+HeaderRow.prototype.getActionCell = function (id,c) {
+	for(var n,i=0;i<c.childNodes.length;i++) {
+		n=c.childNodes[i];
+		if(!n.hasOwnProperty('iRenderAction')) continue;
+		if(n.iRenderAction.id!=id) continue;
+		return n;
 	}
 };
 HeaderRow.prototype.getTarget = function () {

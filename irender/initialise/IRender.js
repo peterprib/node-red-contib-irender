@@ -78,7 +78,8 @@ function IRender() {
 	this.actions={folder:{type:"folder"}};
 	this.guid=0;
 	this.metadata = {
-			action: {action:null,id:null,type:["link","pane","table","svg","googleMap"],url:null,title:null,target:null,pane:null,passing:null,setDetail:null}
+			action: {action:null,id:null,type:["link","pane","table","svg","googleMap","httpGet"],
+				url:null,title:null,target:null,pane:null,passing:null,setDetail:null,timeout:null}
 			,image: {action:null,id:null ,file:null}
 			,menu: {action:null,id:null ,options:{"default":Array.constructor}}
 			,menuOption: {action:null,menu:null,title:null ,executeAction:null ,passing:null}
@@ -89,10 +90,10 @@ function IRender() {
 	this.window={};
 	this.menus={};
 	this.images={
+		alert:"icon-alert.gif",alertBig:"alert_big.gif",cancel:"icon-cancel.gif",error:"icon-error.gif",edit:"icon-edit.gif",
 		file:"file.gif",folderOpen:"folderOpen.gif",folderClose:"folderClose.gif",
-		loadingPage:"loadingpage_small.gif",closeIcon:"close_s.gif",
-		cancel:"icon-cancel.gif",alert:"icon-alert.gif",error:"icon-error.gif",edit:"icon-edit.gif"
-		};
+		loadingPage:"loadingpage_small.gif",closeIcon:"close_s.gif"
+	};
 	this.imageBase="images/";
 	this.addAction({id:"folder",type:"folder"});
 	
@@ -114,9 +115,13 @@ IRender.prototype.getPane = function(n) {
 IRender.prototype.add = function(p) {
 		if(p) {
 			if(p instanceof Array) {
-				p.forEach((c)=>this[c.action](c));
+				p.forEach((c)=>this.add(c));
 			} else {
-				this[p.action](p);
+				try{
+					this[p.action](p);
+				} catch(e) {
+					console.error('IRender add error: '+e.message+" for "+p);
+				}		
 			}
 		}
 		return this;
@@ -317,33 +322,72 @@ IRender.prototype.addVis = function () {
 	.addAction({id:"visConfiguration",title:"Vis Configuration",type:"floatingPane",pane:"visConfiguration"})
 	.addAction({id:"vis",title:"vis",type:"pane",pane:"vis",
 		setDetail:function (p) {
-			let options,div=createDiv();
+			let dataset,options,div=createDiv(),module=this.passing.module||"Network";
 			p.setDetail(div);
 			if(this.passing.config) {
 				let nc=createDiv();
 				nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
 				nc.style.overflow='auto';
+				nc.style.height='auto';
 				options= Object.assign({configure:{enabled:true,container: nc,showButton:true}},this.passing.options);
-				p.headerRow.addRight([{image:"edit",action:"visConfiguration"}]);
-				p.executeHeaderAction("visConfiguration").dependants.visConfiguration.setDetail(nc);
+				p.headerRow.addRight([{image:"edit",action:"visConfiguration"}]);  
+				p.executeHeaderAction("visConfiguration");  //execute to add element so can set content 
+				p.centerRow.dependants.visConfiguration.setDetail(nc); //set content to be used by vis
 			} else {
 				options=this.passing.options;
 			}
-			p.network = new vis[this.passing.module||"Network"](div,this.passing.dataset, options);
+			try {
+				if(module=="Network") {
+					dataset=this.passing.dataset ? this.passing.dataset :
+						this.passing.data ? {nodes:  new vis.DataSet(this.passing.data.nodes), edges:  new vis.DataSet(this.passing.data.edges)} :
+						{nodes:  new vis.DataSet([{id: 1, label: 'No Nodes'}]), edges:  new vis.DataSet([ {from: 1, to: 1}])};
+				} else {
+					dataset=this.passing.dataset ? this.passing.dataset :
+						this.passing.data ? new vis.DataSet(this.passing.data) :
+						[
+							    {x: '2019-09-13', y: 30, group: 0},
+							    {x: '2019-09-14', y: 10, group: 0},
+							    {x: '2019-09-15', y: 15, group: 1},
+							    {x: '2019-09-16', y: 30, group: 1},
+							    {x: '2019-09-17', y: 10, group: 1},
+							    {x: '2019-06918', y: 15, group: 1}
+							];
+				}
+				p.network = new vis[module](div,dataset, options);
+			} catch(e) {
+				p.setError("vis not available, error: "+e.message);
+			}
 		}
 	})
-	.addPane({id:"visInline",title:"vis",header:{right:[{image:"edit",action:"visConfiguration"}]}})
-	.addAction({id:"visInlineg2d",title:"vis",type:"pane",pane:"visInline",
+	.addPane({id:"visWithConfig",title:"vis",header:{right:[{image:"edit",action:"visConfiguration"}]}})
+	.addAction({id:"visWithConfig",title:"vis",type:"pane",pane:"visWithConfig",
 		setDetail:function (p) {
 			let div=createDiv();
 			p.setDetail(div);
 			let nc=createDiv();
 			nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
 			nc.style.overflow='auto';
-			p.executeHeaderAction("visConfiguration").dependants.visConfiguration.setDetail(nc);
-			let network = new vis.Graph2d(div, this.passing.dataset,{ // need to convert to function which is passed to get data
-					configure:{enabled:true,container: nc}
+			nc.style.height='auto';
+			p.executeHeaderAction("visConfiguration");
+			p.centerRow.dependants.visConfiguration.setDetail(nc).close();
+			try {
+				let dataset=this.passing && this.passing.dataset ? this.passing.dataset :
+					this.passing && this.passing.data ? new vis.DataSet(this.passing.data) :
+						new vis.DataSet([
+						    {x: 1, y: 30},
+						    {x: 2, y: 10},
+						    {x: 3, y: 15},
+						    {x: 4, y: 30},
+						    {x: 4, y: 10},
+						    {x: 4, y: 15}
+						]);
+				p.graph2d = new vis.Graph2d(div, dataset,{ // need to convert to function which is passed to get data
+//					configure:{enabled:true,container: nc}
 			});
+			} catch(e) {
+				p.setError("vis not available, error: "+e.message);
+				console.log("vis not available, error: "+e.message +"\n"+e.stack)
+			}
 		}
 	})
 };

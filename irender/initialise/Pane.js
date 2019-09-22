@@ -15,7 +15,7 @@ function Pane(base,paneProperties={},parentElement,target,action) {
 		if(action) {
 			if(target) {
 				if(!target.hasOwnProperty('dependants'))target.dependants=[];
-				t.dependants[action.id]=this;
+				target.dependants[action.id]=this;
 			} else {
 				console.error("expecting target for action "+action.id+" and none found")
 			}
@@ -41,6 +41,7 @@ Pane.prototype.close = function (e) {
 		this.element.style.display = 'none';
 		this.closeDependants();
 		if(this.onCloseHide) return this;
+		this.deleteDependants();
 		delete this;
 	};
 Pane.prototype.closeDependants = function () {
@@ -48,12 +49,26 @@ Pane.prototype.closeDependants = function () {
 			for(var n in this.dependants)
 				this.dependants[n].close();
 		}
-	};  
+		
+		return this;
+	};
+Pane.prototype.deleteDependants = function () {
+		if(this.hasOwnProperty('dependants')) {
+			for(var n in this.dependants)
+				delete this.dependants[n];
+		}
+		return this;
+	};
 Pane.prototype.executeHeaderAction = function (id) {
 		if(this.headerRow) {
 			this.headerRow.executeAction(id);
 		}
 		return this;
+	};
+Pane.prototype.getAction = function (id) {
+		if(this.headerRow) {
+			return this.headerRow.getAction(id);
+		}
 	};
 Pane.prototype.getDetailObject = function () {
 		return this.centerRow.getDetailObject();
@@ -71,7 +86,13 @@ Pane.prototype.open = function () {
 //			-(this.footerNode?this.footerNode.element.getBoundingClientRect().Height:0);
 //};
 Pane.prototype.setDetail = Pane.prototype.appendChild;
-
+Pane.prototype.setError = function(error) {
+	let div=css.setClass(createDiv(),"ErrorDetail");
+	div.appendChild(this.base.getImage("alertBig"));
+	div.appendChild(createNode(error));
+	this.centerRow.replaceDetail(div);
+	return this;
+}
 Pane.prototype.setFullSize = function (n) {
 	n.style.width=this.element.clientWidth+"px";
 	n.style.height=this.element.clientHeight+"px";

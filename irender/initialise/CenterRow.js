@@ -17,8 +17,15 @@ function CenterRow(parent,base,centerProperties,parentElement,options) {
 CenterRow.prototype.appendChild = function (n) {
 	this.detail.appendChild(n);
 };
+CenterRow.prototype.replaceDetail = function (n) {
+	while (this.detail.firstChild) {
+		if(this.detail.firstChild.IRender) this.detail.firstChild.IRender.close();
+		this.detail.removeChild(this.detail.firstChild);
+	}
+	this.detail.appendChild(n);
+};
 CenterRow.prototype.getDetailObject = function () {
-	return this.detail.firstChild.IRender;
+	return this.detail.firstChild.IRender||this;
 };
 CenterRow.prototype.getTarget = function () {
 	return this.parent.getTarget();
