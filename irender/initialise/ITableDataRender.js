@@ -1,3 +1,31 @@
+/*
+ * response: { 
+ * 	structure: [
+ * 			{name:"name",column:this.name,title:"title"}
+ * 			]
+ * 	data: [[col1,col2]]
+ * }
+ * ths.columns={columnName:{offset:0,name:"name",column:this.name,title:"title"},...}
+ * 
+ * 	this.metaData=md;
+	this.columns={};
+	for(let n,i=0;i<md.length;i++) {
+		if(md[i].name) {
+			n=md[i].name;
+			if(!md[i].column) md[i].column=n
+		} else if(md[i].column) {
+			n=md[i].column;
+			md[i].name=n;
+		} else {
+			n="col"+(i+1);
+			md[i].name=n;
+			md[i].column=n;
+		}
+		if(!md[i].title) md[i].title=n;
+		this.columns[n]=Object.assign({offset:i},md[i]);
+	}
+ */
+
 function ITableDataRender(element,urlData,md,mp,data) {
 	this.element=typeof element =="string"?document.getElementById(element):element;
 	if(md) {this.setMetaData(md);}
@@ -44,16 +72,17 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 	this.dataMenu=new IContextMenu();
 	let row=ev.target.parentNode.rowIndex,
 		cell=ev.target.cellIndex;
+	if(isNaN(row) || isNaN(cell)) return;
 	if(row==0) { // Header row
 		this.dataMenu.add("Unhide all",this.unhideRowAll,[],this);
 	} else {
-		this.dataMenu.add("Row Details",this.displayRow,[row,cell],this)
+		this.dataMenu.add("Row Details",this.displayRow,[row-1,cell],this)
 			.add("Hide",this.hideRow,[row,cell],this);
 	}
 	this.dataMenu.positionAbsolute({y:ev.pageY,x:ev.pageX});
 };
-
 ITableDataRender.prototype.displayRow = function (ev,r) {
+	
 	if(!this.displayRowForm) {
 		this.displayRowForm = new IForm(this,null,"Row")
 				.setRemove(this.displayRowRemove.bind(this))
@@ -101,7 +130,6 @@ ITableDataRender.prototype.error = function (err) {
     this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
 
 };
-
 ITableDataRender.prototype.getData = function (url) {
     if((url||"")=="/") throw Error("url not specified");
     let base=this, httpRequest= new XMLHttpRequest();
@@ -152,7 +180,6 @@ ITableDataRender.prototype.getHTMLTable = function () {
 			this.css.createElement(r,"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
 		}
 	}
-	
 	return t;
 };
 ITableDataRender.prototype.hideRow = function (ev,r) {

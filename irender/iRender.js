@@ -23,14 +23,17 @@ const fs=require('fs'),
 	initialPath=path.join(__dirname,"initialise"),
 	cookieParser = require("cookie-parser"),
 	express=require("express");
-let initial="",isSetup,urls={};
+let isSetup,urls={};
 debug({label:"initialise: ",files:initialPath});
-
-fs.readdirSync(path.join(__dirname,"initialise")).forEach(filename => {
-	debug({label:"loading: ",filename:filename});
-	initial+=fs.readFileSync(path.join(initialPath,filename));
-});
-
+function getInitial() {
+	let data="";
+	fs.readdirSync(path.join(__dirname,"initialise")).forEach(filename => {
+		debug({label:"loading: ",filename:filename});
+		data+=fs.readFileSync(path.join(initialPath,filename));
+	});
+	return data;
+}
+let initial=getInitial();
 function setUpURL(RED,node,data,type,id) {
 	const url="/"+nodeLabel+"/"+(id||"initialise");
 	if(id in urls) {

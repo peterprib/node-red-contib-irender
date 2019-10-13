@@ -82,6 +82,8 @@ IForm.prototype.display = function () {
 	this.element.style.display="block";
 	return this;
 };
+
+
 IForm.prototype.getBoundingClientRect = function() {
 	return this.parent.getBoundingClientRect();
 };

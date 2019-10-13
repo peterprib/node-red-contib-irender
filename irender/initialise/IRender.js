@@ -5,7 +5,6 @@ function PaneRow(b,p,n) {
 	this.centerCell=new Pane(b,p,n);
 	this.element.appendChild(this.centerCell.element);
 }
-
 function Text(t) {
 	var n=document.createElement("a");
 	n.innerText=t;
@@ -43,13 +42,13 @@ function Row(table) {
 	table.appendRow(this);
 }
 Row.prototype.addCell = function () {
-		this.appendCell(new Cell(this));
-		return this;
-	};
+	this.appendCell(new Cell(this));
+	return this;
+};
 Row.prototype.appendCell = function (cell) {
-		this.element.appendChild(cell.element);
-		return this;
-	};
+	this.element.appendChild(cell.element);
+	return this;
+};
 function Cell(row) {
 	this.row=row;
 	this.element=document.createElement("TD");
@@ -67,13 +66,11 @@ function Window (base,p,n) {
 }	
 Window.prototype.sizeCenter = function () {
 		// rect is a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
-		this.centerNode.element.height = (this.element.clientHeight
-				-(this.headerNode?this.headerRow.element.getBoundingClientRect().height:0)
-				-(this.footerNode?this.footerRow.element.getBoundingClientRect().height:0)
-				) + "px";
-	};
-
-
+	this.centerNode.element.height = (this.element.clientHeight
+			-(this.headerNode?this.headerRow.element.getBoundingClientRect().height:0)
+			-(this.footerNode?this.footerRow.element.getBoundingClientRect().height:0)
+	) + "px";
+};
 function IRender() {
 	this.actions={folder:{type:"folder"}};
 	this.guid=0;
@@ -103,57 +100,48 @@ function IRender() {
 	this.addVis();
 	this.addSVG();
 }
-IRender.prototype.getImage = function(n) {
-		var i = new Image(16,16);
-		i.src=this.imageBase+this.images[n];
-		return i;
-	};
-IRender.prototype.getPane = function(n) {
-		if(n in this.panes)	return this.panes[n];
-		throw Error("Pane "+n+" not found");
-	};
 IRender.prototype.add = function(p) {
-		if(p) {
-			if(p instanceof Array) {
-				p.forEach((c)=>this.add(c));
-			} else {
-				try{
-					this[p.action](p);
-				} catch(e) {
-					console.error('IRender add error: '+e.message+" for "+p);
-				}		
-			}
+	if(p) {
+		if(p instanceof Array) {
+			p.forEach((c)=>this.add(c));
+		} else {
+			try{
+				this[p.action](p);
+			} catch(e) {
+				console.error('IRender add error: '+e.message+" for "+p);
+			}		
 		}
-		return this;
-	};
+	}
+	return this;
+};
 IRender.prototype.addAction = function(p) {
-		this.checkProperties(p,"action");
-		this.actions[p.id]=new Action(this,p);
-		return this;
-	};
+	this.checkProperties(p,"action");
+	this.actions[p.id]=new Action(this,p);
+	return this;
+};
 IRender.prototype.addImage = function(p) {
-		this.checkProperties(p,"image");
-		this.images[p.id]=p.file;
-        return this;
-	};
+	this.checkProperties(p,"image");
+	this.images[p.id]=p.file;
+    return this;
+};
 IRender.prototype.addMenu = function(p) {
-		this.checkProperties(p,"menu");
-		this.menus[p.id]=p;
-		return this;
-	};
+	this.checkProperties(p,"menu");
+	this.menus[p.id]=p;
+	return this;
+};
 IRender.prototype.addMenuOption = function(m,p) {
-		let	properties=p?Object.assign({menu:m},p):m,
-			menu=properties.menu;
-		this.checkProperties(properties,"menuOption");
-		if(!(menu in this.menus)) throw Error("menu not found for "+menu);
-		this.menus[menu].options.push(properties);
-		return this;
-	};
+	let	properties=p?Object.assign({menu:m},p):m,
+		menu=properties.menu;
+	this.checkProperties(properties,"menuOption");
+	if(!(menu in this.menus)) throw Error("menu not found for "+menu);
+	this.menus[menu].options.push(properties);
+	return this;
+};
 IRender.prototype.addPane = function(p) {
-		this.checkProperties(p,"pane");
-		this.panes[p.id]=p;
-        return this;
-	};
+	this.checkProperties(p,"pane");
+	this.panes[p.id]=p;
+	return this;
+};
 IRender.prototype.attributes = function(a) {
 		if(a===null) return "";
 		var r="";
@@ -162,120 +150,130 @@ IRender.prototype.attributes = function(a) {
 		return r;
 	};
 IRender.prototype.build = function() {
-		console.log("IRender build");
-		this.setAllNodes('IRender',this.buildBase);
-        return this;
-	};
+	console.log("IRender build");
+	this.setAllNodes('IRender',this.buildBase);
+	return this;
+};
 IRender.prototype.buildBase = function(n) {
-		try{var f=this[n.nodeName];} catch(e) {
-			console.error("IRender buildBase ignored tag "+n.nodeName.toString());	
-			return this;
-		}
-		try{f.apply(this,[n]);} catch(e) {
-			console.log("IRender buildBase "+e);	
-			console.error("IRender buildBase tag "+n.nodeName.toString()+ "error: "+e+"\nStack: "+e.stack);	
-		}
-        return this;
-	};
+	try{var f=this[n.nodeName];} catch(e) {
+		console.error("IRender buildBase ignored tag "+n.nodeName.toString());	
+		return this;
+	}
+	try{f.apply(this,[n]);} catch(e) {
+		console.log("IRender buildBase "+e);	
+		console.error("IRender buildBase tag "+n.nodeName.toString()+ "error: "+e+"\nStack: "+e.stack);	
+	}
+    return this;
+};
 IRender.prototype.BODY = function(n) {
-		this.windowObject=new Window(this,this.window,n);
-	};
-IRender.prototype.getAdjustedPosition = function(x,y,n) {
-		// rect is a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
-		var window=this.getBoundingClientRect()
-			,pane=n.getBoundingClientRect()
-			,paneEndx=x+pane.width
-			,paneEndy=y+pane.height
-			,ax=(paneEndx<window.width?x:x-paneEndx+window.width)
-			,ay=(paneEndy<window.height?y:y-paneEndy+window.height);
-		return {x:ax,y:ay};
-	};
-IRender.prototype.getBoundingClientRect = function() {
-		return this.windowObject.element.getBoundingClientRect();
-	};
+	this.windowObject=new Window(this,this.window,n);
+};
 IRender.prototype.checkProperties = function(o,e) {
-		var ps=this.metadata[e];
-		for(var p in o)
-			if(!p.inList(ps))
-				throw Error("invalid property "+p+" for "+e);
-		for(var p in ps) {
-			if(!o.hasOwnProperty(p)) {
-				if(ps[p]!==null) {
-					var d=coalesce(ps[p]["default"],null);
-					if(d == Array.constructor) {
-						o[p] = [];
-					} else if(d == Object.constructor) {
-						o[p] = {};
-					} else if(d instanceof Function) {
-						o[p] = new d();
-					} else if(d instanceof Array) {
-						if (ps[p] in d)
-							throw Error("unknown value for "+p+" found "+ps[p]+" expecting "+d.join());
-					} else {
-						op[p]= d;
-					}
+	var ps=this.metadata[e];
+	for(var p in o)
+		if(!p.inList(ps))
+			throw Error("invalid property "+p+" for "+e);
+	for(var p in ps) {
+		if(!o.hasOwnProperty(p)) {
+			if(ps[p]!==null) {
+				var d=coalesce(ps[p]["default"],null);
+				if(d == Array.constructor) {
+					o[p] = [];
+				} else if(d == Object.constructor) {
+					o[p] = {};
+				} else if(d instanceof Function) {
+					o[p] = new d();
+				} else if(d instanceof Array) {
+					if (ps[p] in d)
+						throw Error("unknown value for "+p+" found "+ps[p]+" expecting "+d.join());
+				} else {
+					op[p]= d;
 				}
 			}
 		}
-		return this;
-	};
-IRender.prototype.header = function(a,n) {
-		return this.tag("header",a,coalesce(n,this.window.title,"No Title Set"));
-	};
-IRender.prototype.insertFooter = function(n) {
-		console.log("IRender insertFooter");
-		var h = css.setClass(document.createElement("FOOTER"),"Footer");
-		h.appendChild(this.createNode(coalesce(this.window.footer,"No Footer Set")));
-		n.appendChild(h);
-        return this;
-	};
-IRender.prototype.insertHeader = function(n) {
-		console.log("IRender insertHeader");
-		var h = css.setClass(document.createElement("HEADER"),"Header");
-		h.appendChild(createNode(coalesce(this.window.title,"No Title Set")));
-		if(n.childNodes.length>0)
-			n.insertBefore(h,n.childNodes[0]);
-		else
-			n.appendChild(h);
-        return this;
-	};
-IRender.prototype.input = function(a,n) {
-		return this.tag("input",a,n);
-	};
-IRender.prototype.options = function(id,o) {
-		var r="";
-		for(var i in o)
-			r+=this.tag("option",{label:i},o[i]);
-		return this.tag("select",{id:id},r);
-	};
+	}
+	return this;
+};
+IRender.prototype.getAdjustedPosition = function(x,y,n) {
+	// rect is a DOMRect object with eight properties: left, top, right, bottom, x, y, width, height
+	var window=this.getBoundingClientRect()
+		,pane=n.getBoundingClientRect()
+		,paneEndx=x+pane.width
+		,paneEndy=y+pane.height
+		,ax=(paneEndx<window.width?x:x-paneEndx+window.width)
+		,ay=(paneEndy<window.height?y:y-paneEndy+window.height);
+	return {x:ax,y:ay};
+};
+IRender.prototype.getBoundingClientRect = function() {
+	return this.windowObject.element.getBoundingClientRect();
+};
 IRender.prototype.getPaneDetail = function(id,node) {
-//	 	for(var p=node.parentNode;node.name!=="";p=node.parentNode) continue;
-	 	
-	};
+// 	for(var p=node.parentNode;node.name!=="";p=node.parentNode) continue;
+};
+IRender.prototype.getImage = function(n) {
+	var i = new Image(16,16);
+	i.src=this.imageBase+this.images[n];
+	return i;
+};
+IRender.prototype.getPane = function(n) {
+	if(n in this.panes)	return this.panes[n];
+	throw Error("Pane "+n+" not found");
+};
+IRender.prototype.header = function(a,n) {
+	return this.tag("header",a,coalesce(n,this.window.title,"No Title Set"));
+};
+IRender.prototype.insertFooter = function(n) {
+	console.log("IRender insertFooter");
+	var h = css.setClass(document.createElement("FOOTER"),"Footer");
+	h.appendChild(this.createNode(coalesce(this.window.footer,"No Footer Set")));
+	n.appendChild(h);
+    return this;
+};
+IRender.prototype.insertHeader = function(n) {
+	console.log("IRender insertHeader");
+	var h = css.setClass(document.createElement("HEADER"),"Header");
+	h.appendChild(createNode(coalesce(this.window.title,"No Title Set")));
+	if(n.childNodes.length>0)
+		n.insertBefore(h,n.childNodes[0]);
+	else
+		n.appendChild(h);
+    return this;
+};
+IRender.prototype.input = function(a,n) {
+	return this.tag("input",a,n);
+};
+IRender.prototype.options = function(id,o) {
+	var r="";
+	for(var i in o)
+		r+=this.tag("option",{label:i},o[i]);
+	return this.tag("select",{id:id},r);
+};
 IRender.prototype.setAllNodes = function(c,f) {
-		var f=coalesce(f,this[c],null);
-		if(f===null) return;
-		for(var ns = document.getElementsByClassName(c),nsl=ns.length,i=0;i<nsl;i++)
-			f.apply(this,[ns[i]]);
-        return this;
-	};
+	var f=coalesce(f,this[c],null);
+	if(f===null) return;
+	for(var ns = document.getElementsByClassName(c),nsl=ns.length,i=0;i<nsl;i++)
+		f.apply(this,[ns[i]]);
+    return this;
+};
 IRender.prototype.setAllProperties = function(t,p,m) {
-		for(var i in p)
-			t[i]=coalesce(p[i],(m.default?m.default[i]:null));
-        return this;
-	};
+	for(var i in p)
+		t[i]=coalesce(p[i],(m.default?m.default[i]:null));
+    return this;
+};
 IRender.prototype.setWindow = function(p) {
-		this.checkProperties(p,"window");
-		this.window=p;
-		this.setAllProperties(this.window,p,this.metadata.window);
-        return this;
-	};
+	this.checkProperties(p,"window");
+	this.window=p;
+	this.setAllProperties(this.window,p,this.metadata.window);
+    return this;
+};
 //IRender.prototype.submitButton = function() {
 //		return this.input({type:"submit",value:"Submit"});
 //	};
 IRender.prototype.tag = function(tag,a,n) {
-		return "<"+tag+this.attributes(a)+">"+coalesce(n,"")+"</"+tag+">";
+	return "<"+tag+this.attributes(a)+">"+coalesce(n,"")+"</"+tag+">";
 };
+
+
 IRender.prototype.addSVG = function () {
 	this.addAction({id:"svg",title:"SVG Editor",type:"svg",pane:"svgEditor"
 		,passing:{draw:[{action:"circle",cx:"50",cy:"50",r:"40",stroke:"green","stroke-width":4,fill:"yellow"}
@@ -391,4 +389,3 @@ IRender.prototype.addVis = function () {
 		}
 	})
 };
-

@@ -1,3 +1,19 @@
+if(!Array.prototype.move)
+	Array.prototype.move = function(from, to) {
+			if(from<to) to--;
+			this.splice(to, 0, this.splice(from, 1)[0]);
+		};
+if(!Number.prototype.between)
+	Number.prototype.between  = function (min, max) {
+		    return !(this < min || this > max);
+		};
+if(!String.prototype.in)
+    String.prototype.in = function (str) {
+			for (var i = 0; i < arguments.length; i++)
+				if(this==arguments[i]) return true;
+			return false;
+   		};
+
 function addCloseIcon (o,n) {
 	o.closeIcon=css.setClass(o.base.getImage("closeIcon"),"CloseIcon");
 	n.appendChild(o.closeIcon);
