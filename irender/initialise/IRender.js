@@ -75,12 +75,12 @@ function IRender() {
 	this.actions={folder:{type:"folder"}};
 	this.guid=0;
 	this.metadata = {
-			action: {action:null,id:null,type:["link","pane","table","svg","googleMap","httpGet"],
+			action: {action:null,id:null,type:["chart","googleMap","httpGet","link","pane","svg","table"],
 				url:null,title:null,target:null,pane:null,passing:null,setDetail:null,timeout:null}
 			,image: {action:null,id:null ,file:null}
 			,menu: {action:null,id:null ,options:{"default":Array.constructor}}
 			,menuOption: {action:null,menu:null,title:null ,executeAction:null ,passing:null}
-			,pane: {action:null,id:null ,title:null, leftMenu:null,show:null ,closable:null, onCloseHide:null ,header:null ,footer:null, content:null}
+			,pane: {action:null,id:null ,title:null, leftMenu:null,show:null ,closable:null, onCloseHide:null, initiallyHide:null, header:null ,footer:null, content:null}
 			,window: {title:{"default":"No Title Specified"},leftMenu:null,footer:{"default":"No Footer Specified"},pane:null}
 		};
 	this.panes={};
@@ -89,14 +89,17 @@ function IRender() {
 	this.images={
 		alert:"icon-alert.gif",alertBig:"alert_big.gif",cancel:"icon-cancel.gif",error:"icon-error.gif",edit:"icon-edit.gif",
 		file:"file.gif",folderOpen:"folderOpen.gif",folderClose:"folderClose.gif",
-		loadingPage:"loadingpage_small.gif",closeIcon:"close_s.gif"
+//		loadingPage:"loadingpage_small.gif",
+		loadingPage:"chart/Three_gears.gif",
+		closeIcon:"close_s.gif",
+		tableIcon:"icon.index.gif"
 	};
 	this.imageBase="images/";
 	this.addAction({id:"folder",type:"folder"});
-	
 	this.addPane({id:"error",title:"Error"});
 	this.addAction({id:"actionNotDefined",type:"floatingPane",pane:"error"
 		,passing:{message:"Action has not been defined"}});
+	this.addAction({id:"display",type:"function",name"display"});
 	this.addVis();
 	this.addSVG();
 }
@@ -143,12 +146,12 @@ IRender.prototype.addPane = function(p) {
 	return this;
 };
 IRender.prototype.attributes = function(a) {
-		if(a===null) return "";
-		var r="";
-		for(var p in a)
-			r+=" "+p+"='"+a[p]+"'";
-		return r;
-	};
+	if(a===null) return "";
+	let r="";
+	for(let p in a)
+		r+=" "+p+"='"+a[p]+"'";
+	return r;
+};
 IRender.prototype.build = function() {
 	console.log("IRender build");
 	this.setAllNodes('IRender',this.buildBase);
@@ -248,6 +251,14 @@ IRender.prototype.options = function(id,o) {
 		r+=this.tag("option",{label:i},o[i]);
 	return this.tag("select",{id:id},r);
 };
+IRender.prototype.getLoadingPane = function() {
+	if(!this.loadingPaneIcon)
+		this.loadingPaneIcon=css.setClass(this.getImage("loadingPage"),"LoadingIcon");
+    return this.loadingPaneIcon;
+};
+IRender.prototype.setLoading = function(e) {
+    e.appendChild(this.getLoadingPane());
+};
 IRender.prototype.setAllNodes = function(c,f) {
 	var f=coalesce(f,this[c],null);
 	if(f===null) return;
@@ -272,8 +283,6 @@ IRender.prototype.setWindow = function(p) {
 IRender.prototype.tag = function(tag,a,n) {
 	return "<"+tag+this.attributes(a)+">"+coalesce(n,"")+"</"+tag+">";
 };
-
-
 IRender.prototype.addSVG = function () {
 	this.addAction({id:"svg",title:"SVG Editor",type:"svg",pane:"svgEditor"
 		,passing:{draw:[{action:"circle",cx:"50",cy:"50",r:"40",stroke:"green","stroke-width":4,fill:"yellow"}
@@ -316,7 +325,7 @@ IRender.prototype.addSVG = function () {
 };
 IRender.prototype.addVis = function () {
 	this.addPane({id:"vis",title:"vis"})
-	.addPane({id:"visConfiguration",title:"vis Configuration",onCloseHide:true})
+	.addPane({id:"visConfiguration",title:"vis Configuration",onCloseHide:true,initiallyHide:true})
 	.addAction({id:"visConfiguration",title:"Vis Configuration",type:"floatingPane",pane:"visConfiguration"})
 	.addAction({id:"vis",title:"vis",type:"pane",pane:"vis",
 		setDetail:function (p) {
@@ -327,10 +336,10 @@ IRender.prototype.addVis = function () {
 				nc.style.height=Math.round(window.innerHeight * 0.80) + 'px'; 
 				nc.style.overflow='auto';
 				nc.style.height='auto';
-				options= Object.assign({configure:{enabled:true,container: nc,showButton:true}},this.passing.options);
+				options= Object.assign({configure:{enabled:true,container:nc,showButton:true}},this.passing.options);
 				p.headerRow.addRight([{image:"edit",action:"visConfiguration"}]);  
 				p.executeHeaderAction("visConfiguration");  //execute to add element so can set content 
-				p.centerRow.dependants.visConfiguration.setDetail(nc); //set content to be used by vis
+				p.findDependant("visConfiguration").setDetail(nc); //set content to be used by vis
 			} else {
 				options=this.passing.options;
 			}
@@ -367,7 +376,7 @@ IRender.prototype.addVis = function () {
 			nc.style.overflow='auto';
 			nc.style.height='auto';
 			p.executeHeaderAction("visConfiguration");
-			p.centerRow.dependants.visConfiguration.setDetail(nc).close();
+			p.findDependant("visConfiguration").setDetail(nc).close();
 			try {
 				let dataset=this.passing && this.passing.dataset ? this.passing.dataset :
 					this.passing && this.passing.data ? new vis.DataSet(this.passing.data) :

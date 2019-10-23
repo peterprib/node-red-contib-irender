@@ -11,7 +11,7 @@ function MenuOption(base,p,parent) {
 	this.element.addEventListener('click', this.onclick.bind(this), false);
 	switch(p.executeAction) {
 		case "folder":
-			this.setCollapsed();
+			this.collapse();
 			break;
 		case "states":
 			this.state=0;
@@ -24,45 +24,49 @@ function MenuOption(base,p,parent) {
 	this.textA.innerText=coalesce(this.title,(this.actionObject?this.actionObject.title:null),"*** no title specifed *** ");
 	this.properties=p;
 }
-MenuOption.prototype.nextState = function (a) {
-		if(this.iconCell.firstChild) this.iconCell.removeChild(this.iconCell.firstChild);
-		if(++this.state>=a.passing.length) this.state=0;
-		let state=a.passing[this.state];
-		this.iconCell.appendChild(this.base.getImage(state.image));
-		if(state.call) {
-			state.call.apply(state.object||state,state.parameters);
-		}
-	};
-MenuOption.prototype.isExpanded = function () {
-		return (this.expandCell.innerText=="-");
-	};
-MenuOption.prototype.setExpanded = function (b) {
-		this.expandCell.innerText="-";
+MenuOption.prototype.collapse = function () {
+	this.expandCell.innerText="+";
+	try{
 		this.iconCell.removeChild(this.iconCell.firstChild);
-		this.iconCell.appendChild(this.base.getImage("folderOpen"));
-		
-		if(this.textCell.lastChild.nodeName=="TABLE") {
-			this.textCell.lastChild.style.display="TABLE";
-			return;
-		}
-		if (!("menu" in this.passing)) throw Error("no menu entry specified in passing options");
-		this.menu=new Menu(this.base,Object.assign({subMenu:true},this.base.menus[this.passing.menu]),this.textCell,this.parent.target);
-	};
-MenuOption.prototype.setCollapsed = function () {
-		this.expandCell.innerText="+";
-		try{
-			this.iconCell.removeChild(this.iconCell.firstChild);
-		} catch(ex) {}
-		this.iconCell.appendChild(this.base.getImage("folderClose"));
-		if(this.textCell.childElementCount>1) this.textCell.lastChild.style.display="none";
-	};
-MenuOption.prototype.setFocus = function (t,n) {
-		return this.parent.setFocus(coalesce(this.title,t),n);
-	};
-MenuOption.prototype.setDetail = function (t,n) {
-		return this.parent.setDetail(coalesce(this.title,t),n);
-	};
+	} catch(ex) {}
+	this.iconCell.appendChild(this.base.getImage("folderClose"));
+	if(this.textCell.childElementCount>1) this.textCell.lastChild.style.display="none";
+	return this;
+};
+MenuOption.prototype.expand = function (b) {
+	this.expandCell.innerText="-";
+	this.iconCell.removeChild(this.iconCell.firstChild);
+	this.iconCell.appendChild(this.base.getImage("folderOpen"));
+	if(this.textCell.lastChild.nodeName=="TABLE") {
+		this.textCell.lastChild.style.display="TABLE";
+		return this;
+	}
+	if (!("menu" in this.passing)) throw Error("no menu entry specified in passing options");
+	this.menu=new Menu(this.base,Object.assign({subMenu:true},this.base.menus[this.passing.menu]),this.textCell,this.parent.target);
+	return this;
+};
+MenuOption.prototype.isExpanded = function () {
+	return (this.expandCell.innerText=="-");
+};
+MenuOption.prototype.nextState = function (a) {
+	if(this.iconCell.firstChild) this.iconCell.removeChild(this.iconCell.firstChild);
+	if(++this.state>=a.passing.length) this.state=0;
+	let state=a.passing[this.state];
+	this.iconCell.appendChild(this.base.getImage(state.image));
+	if(state.call) {
+		state.call.apply(state.object||state,state.parameters);
+	}
+};
 MenuOption.prototype.onclick = function (ev) {
-		ev.stopPropagation();
-		this.actionObject.exec(this,ev,this.passing);
-	};
+	ev.stopPropagation();
+	this.actionObject.exec(this,ev,this.passing);
+};
+MenuOption.prototype.setFocus = function (t,n) {
+	return this.parent.setFocus(coalesce(this.title,t),n);
+};
+MenuOption.prototype.setDetail = function (t,n) {
+	return this.parent.setDetail(coalesce(this.title,t),n);
+};
+MenuOption.prototype.toogle = function () {
+	return this.isExpanded()?this.collapse():this.expand();
+};

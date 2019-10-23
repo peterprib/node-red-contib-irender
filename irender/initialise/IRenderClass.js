@@ -42,6 +42,7 @@ IRenderClass.prototype.CreateStyleSheet = function (n) {
    	.add("Table","display: table; height: 100%; width: 100%; border-spacing: 0px;")
    	.add("TableCell","background-color: inherit")
    	.add("TableRow","display: table-row;")
+   	.add("LoadingIcon","max-height: 50px; max-width: 50px; vertical-align: middle; margin-left: auto; margin-right: auto; height: 100%; width: 100%;")
    	this.setHTMLBody("height: 100%; width: 100%; margin: 0px 0px 0px 0px; overflow: hidden;");
 };
 IRenderClass.prototype.add = function (name,rules) {
@@ -87,4 +88,4 @@ IRenderClass.prototype.replaceClass = function (n,name) {
 IRenderClass.prototype.resetClass = function (n,name) {
 		return css.removeClass(n,name,name);
 	};
-var css = new IRenderClass();
+var css = new IRenderClass("default");

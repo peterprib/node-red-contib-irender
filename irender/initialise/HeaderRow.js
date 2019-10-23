@@ -12,7 +12,7 @@ function HeaderRow(base,headerProperties,parentElement,options) {
 	this.main.appendChild(this.mainRow);
 	this.left=createElement("TD","HeaderLeft",this.main);
 	this.center=createElement("TD","HeaderCenter",this.main);
-	this.center.appendChild(createNode("\u00a0"+(headerProperties.title||"No Title Set")+"\u00a0"));
+	this.setTitle(headerProperties.title||"No Title Set");
 	this.right=createElement("TD","HeaderRight",this.main);
 	if(headerProperties.closable) addCloseIcon(this,this.right);
 	if(headerProperties.right) this.addRight(headerProperties.right);
@@ -65,4 +65,10 @@ HeaderRow.prototype.onclickAction = function (ev) {
 HeaderRow.prototype.onclickClose = function (ev) {
 	ev.stopPropagation();
 	this.pane.onclickClose(ev);
+};
+HeaderRow.prototype.setTitle = function (t) {
+	while (this.center.firstChild) {
+		this.center.removeChild(this.center.firstChild);
+	}
+	this.center.appendChild(createNode("\u00a0"+t+"\u00a0"));
 };

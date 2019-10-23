@@ -189,7 +189,7 @@ function Svg(base,properties,options) {
 	this.set(Object.assign({},properties,{width:"100%",height:"100%"}));
 	this.element.appendChild(this.svg);
 	this.loadUseShapes(shapes);
-	if(this.options.mouseCoords||true) {
+	if(this.options.mouseCoords==null || this.options.mouseCoords) {
 		this.mouse=new MouseSvg(this);
 	}
 	this.element.addEventListener('dblclick', this.editFloatingPane.bind(this), false)

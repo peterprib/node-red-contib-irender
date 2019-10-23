@@ -32,7 +32,6 @@ function ITableDataRender(element,urlData,md,mp,data) {
 	if(mp) {this.setMapping(mp);}
 	this.data=data||[];
 	this.element.innerText=null;
-	this.setLoading();  
 	this.css=new IRenderClass("ITableCSS")
 			.add("Error","border: 1px solid red;")
 			.add("Table","border: 1px solid #a4a4a4; width:100%; height: 100%;")
@@ -46,6 +45,7 @@ function ITableDataRender(element,urlData,md,mp,data) {
 			.add("Sticky","position: sticky; position: -webkit-sticky;")
 			.add("TableBody","display: block; height: 100%; overflow: auto; width: 100%")
 			;
+	this.setLoading();  
 	try{
         this.getData(urlData);
 	} catch(e) {
@@ -82,7 +82,6 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 	this.dataMenu.positionAbsolute({y:ev.pageY,x:ev.pageX});
 };
 ITableDataRender.prototype.displayRow = function (ev,r) {
-	
 	if(!this.displayRowForm) {
 		this.displayRowForm = new IForm(this,null,"Row")
 				.setRemove(this.displayRowRemove.bind(this))
@@ -128,7 +127,9 @@ ITableDataRender.prototype.displayRowRemove = function () {
 ITableDataRender.prototype.error = function (err) {
     console.warn(err);
     this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
-
+	if(this.element.IRender) {
+		this.element.IRender.onLoadError(err);
+	}
 };
 ITableDataRender.prototype.getData = function (url) {
     if((url||"")=="/") throw Error("url not specified");
@@ -192,8 +193,18 @@ ITableDataRender.prototype.processData = function (data) {
         this.setMapping(this.structure);
     }
     this.getHTMLTable();
+    if(this.onLoad)
+    	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
 };
 ITableDataRender.prototype.setLoading = function () {
+	if(this.element.IRender) {
+		if(this.element.IRender.setLoading) {
+			this.element.IRender.setLoading();
+		} else {
+			this.element.IRender.base.setLoading(this.element);
+		}
+		return;
+	}
     this.element.appendChild(document.createTextNode("Loading "));
 };
 ITableDataRender.prototype.setMetaData = function (md) {

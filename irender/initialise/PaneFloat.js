@@ -15,21 +15,33 @@ function PaneFloat(base,paneProperties,options,target,action) {
 	this.pane.headerRow.element.draggable=true;//dragStart
 	this.pane.headerRow.element.addEventListener('dragstart', dragStart.bind(this), false);
 }
+PaneFloat.prototype.getDetail= function() {
+	return this.pane.getDetail();
+};
+PaneFloat.prototype.getElement= function() {
+	return this.pane.element;
+};
+PaneFloat.prototype.getPane= function() {
+	return this.pane;
+};
 PaneFloat.prototype.position = function (x,y) {
-		this.positionAbsolute(this.pane.base.getAdjustedPosition(x,y,this.pane.element))
-	};
+	this.positionAbsolute(this.pane.base.getAdjustedPosition(x,y,this.pane.element))
+};
 PaneFloat.prototype.positionAbsolute = function (p) {
-		this.pane.element.style.left=p.x+"px";
-		this.pane.element.style.top=p.y+"px";
-	};
+	this.pane.element.style.left=p.x+"px";
+	this.pane.element.style.top=p.y+"px";
+};
 PaneFloat.prototype.movePane = function (p) {
-		const rect = this.pane.element.getBoundingClientRect();
-		this.positionAbsolute({x:rect.left+p.x,y:rect.top+p.y});
-		this.setMaxPaneSize();
-	};
+	const rect = this.pane.element.getBoundingClientRect();
+	this.positionAbsolute({x:rect.left+p.x,y:rect.top+p.y});
+	this.setMaxPaneSize();
+};
 PaneFloat.prototype.setMaxPaneSize = function () {
-		const p = this.pane.element.getBoundingClientRect()
-			,w=this.pane.base.getBoundingClientRect()
-		if(w.width<p.right) this.pane.element.style.width=(w.width-p.left)+"px";
- 		if(w.height<p.bottom) this.pane.element.style.height=(w.height-p.top)+"px";
-	};
+	const p = this.pane.element.getBoundingClientRect()
+		,w=this.pane.base.getBoundingClientRect()
+	if(w.width<p.right) this.pane.element.style.width=(w.width-p.left)+"px";
+		if(w.height<p.bottom) this.pane.element.style.height=(w.height-p.top)+"px";
+};
+PaneFloat.prototype.setLoading= function() {
+	this.pane.setLoading();
+};
