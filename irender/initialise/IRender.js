@@ -76,7 +76,7 @@ function IRender() {
 	this.guid=0;
 	this.metadata = {
 			action: {action:null,id:null,type:["chart","googleMap","httpGet","link","pane","svg","table"],
-				url:null,title:null,target:null,pane:null,passing:null,setDetail:null,timeout:null}
+				url:null,title:null,target:null,pane:null,passing:null,setDetail:null,timeout:null,name:null}
 			,image: {action:null,id:null ,file:null}
 			,menu: {action:null,id:null ,options:{"default":Array.constructor}}
 			,menuOption: {action:null,menu:null,title:null ,executeAction:null ,passing:null}
@@ -92,14 +92,14 @@ function IRender() {
 //		loadingPage:"loadingpage_small.gif",
 		loadingPage:"chart/Three_gears.gif",
 		closeIcon:"close_s.gif",
-		tableIcon:"icon.index.gif"
+		tableIcon:"icon-index.gif"
 	};
 	this.imageBase="images/";
 	this.addAction({id:"folder",type:"folder"});
 	this.addPane({id:"error",title:"Error"});
 	this.addAction({id:"actionNotDefined",type:"floatingPane",pane:"error"
 		,passing:{message:"Action has not been defined"}});
-	this.addAction({id:"display",type:"function",name"display"});
+	this.addAction({id:"display",type:"function",name:"display"});
 	this.addVis();
 	this.addSVG();
 }

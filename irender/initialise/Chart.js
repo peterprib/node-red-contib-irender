@@ -51,7 +51,7 @@ IChart.prototype.setOptions=function (options) {
 		outline:'black',
 		xAxisPosition:0,
 		yAxisPosition:0,
-		display:'chart',
+//		display:'chart',
 		tickIncrement:5,
 		scaleUpOnly:false,
 		scaleDownOnly:false,
@@ -94,21 +94,25 @@ IChart.prototype.setOptions=function (options) {
 		yScaling:'AUTO',
 		zAxis:null, 
 		bubbleRatio:0.2,
-		overlays:null,
-		overlayDetails:[],
 		onNoDataThrowError:true
 	},
 	options
 	);
 	if(this.url===null) throw Error("Cannot render chart as url for table not specified");
-}
-
+};
+IChart.prototype.display=function() {
+	this.tableData.displayPane();
+};
+IChart.prototype.setDataStore=function(dataStore) {
+	this.dataStore=dataStore;
+};
 IChart.prototype.setData=function(tableData) {
 	this.firstChartLoad=true;
-	this.tableData=tableData;
-	this.localDataSet=this.tableData.data;  
+//	this.localDataSet=this.tableData.data; 
+	this.localDataSet=this.dataStore.Data;
 	if(this.flipDataSet)			
 		this.localDataSet.reverse();
+	this.buildDataSet();
 };
 IChart.prototype.buildDataSet=function() {
 	if(this.localDataSet.length <1 && this.onNoDataThrowError) throw Error('No data to chart');
@@ -612,12 +616,7 @@ IChart.prototype.canvasCoords=function(callingEvent) {
 	var yPos=callingEvent.clientY - this.canvasOffset[1]-10;
 	while (this.detailXY.rows.length> 0) 
 		this.detailXY.deleteRow(0);
-
 	this.canvasCoordsDetails(this,xPos,yPos);
-	for(let i=0;i<this.overlayDetails.length;i++)
-		if(this.overlayDetails[i].tableObject!=null)
-			this.overlayDetails[i].tableObject.canvasCoordsDetails(this,xPos,yPos);
-
 	this.detailXY.setStyle({'top':  (yPos-  ( yPos<this.chart.height/2 ? 0 : this.detailXY.getHeight()) ) + 'px'
 		,'left': (xPos - ( xPos<this.chart.width/2  ? 0 : this.detailXY.getWidth() ) ) + 'px'
 		,'display': 'block'});

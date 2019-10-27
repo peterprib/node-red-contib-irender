@@ -10,17 +10,18 @@ function Action (b,p) {
 };
 Action.prototype.exec_chart = function (node,ev,p) {
 	try{
-		const chart=new IChart(this.base,this.passing,{loadDefer:true}).element,
-			p=new Pane(this.base,Object.assign({tab:false},this.base.getPane(this.pane)),chart),
-			floatingPane=this.exec_floatingPane(chart,{onCloseHide:true,initiallyHide:true},p),
+		const chart=new IChart(this.base,this.passing,{loadDefer:true}),
+			p=new Pane(this.base,Object.assign({tab:false},this.base.getPane(this.pane)),chart.element),
+			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
 			table=this.exec_table(floatingPane.getPane(),
 				Object.assign({onLoad:{callFunction:chart.setData,object:chart}},node.passing,this.passing)
 			);
+			chart.setDataStore(table);
 		node.setDetail(this.title,p.element);
-		p.setDetail(chart);
+		p.setDetail(chart.element);
 //		.addAction({id:"charDisplay",type:"floatingPane",function:floatingPane.show})
 
-		p.headerRow.addRight([{image:"tableIcon",action:"display",target:floatingPane}]); 
+		p.headerRow.addRight([{image:"tableIcon",action:"display",tableData:table}]); 
 	} catch(ex) {
 		this.setCatchError(node,ex);
 	}
@@ -55,8 +56,9 @@ Action.prototype.exec_floatingPane = function (node,ev,p) {
 Action.prototype.exec_folder = function (node) {
 	return node.toggle();
 };
-Action.prototype.exec_function = function (node) {
-	// node.target[this.name].apply(node.target,)
+Action.prototype.exec_function = function (node,ev,properties) {
+	const targetNode=node.getTarget();
+	targetNode[this.name].apply(targetNode,[node,ev,properties]);
 };
 Action.prototype.exec_httpGet = function (node) {
 	let action=this,

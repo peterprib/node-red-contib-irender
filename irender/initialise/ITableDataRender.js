@@ -81,6 +81,10 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 	}
 	this.dataMenu.positionAbsolute({y:ev.pageY,x:ev.pageX});
 };
+ITableDataRender.prototype.displayPane = function (ev,r) {
+	if(this.element.iRender)
+		this.element.iRender.display();
+};
 ITableDataRender.prototype.displayRow = function (ev,r) {
 	if(!this.displayRowForm) {
 		this.displayRowForm = new IForm(this,null,"Row")
