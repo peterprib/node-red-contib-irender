@@ -101,7 +101,7 @@ IChart.prototype.setOptions=function (options) {
 	if(this.url===null) throw Error("Cannot render chart as url for table not specified");
 };
 IChart.prototype.display=function() {
-	this.tableData.displayPane();
+	this.dataStore.displayPane();
 };
 IChart.prototype.setDataStore=function(dataStore) {
 	this.dataStore=dataStore;

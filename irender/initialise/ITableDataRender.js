@@ -81,9 +81,12 @@ ITableDataRender.prototype.contextmenu = function (ev) {
 	}
 	this.dataMenu.positionAbsolute({y:ev.pageY,x:ev.pageX});
 };
-ITableDataRender.prototype.displayPane = function (ev,r) {
-	if(this.element.iRender)
-		this.element.iRender.display();
+ITableDataRender.prototype.displayPane = function () {
+	if(this.element.IRender) {
+		this.element.IRender.display();
+	} else {
+		console.error("ITableDataRender dispayPane IRender not found on element");
+	}
 };
 ITableDataRender.prototype.displayRow = function (ev,r) {
 	if(!this.displayRowForm) {

@@ -40,7 +40,7 @@ HeaderRow.prototype.executeAction = function (id) {
 HeaderRow.prototype.getAction = function (id) {
 	return this.getActionCell(id,this.left)||this.getActionCell(id,this.right);
 };
-HeaderRow.prototype.getActionCell = function (id,c) {
+HeaderRow.prototype.getActionCell = function (id,elements) {
 	return elements.find(c=>c.iRenderAction && n.iRenderAction.id==id);
 };
 HeaderRow.prototype.getTarget = function () {
