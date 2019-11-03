@@ -86,6 +86,12 @@ Pane.prototype.hide = function () {
 	this.element.style.display = 'none';
 	this.closeDependants();
 };
+Pane.prototype.display = function () {
+	if(this.element.style.display == 'table') return;
+	this.styleDisplay=this.element.style.display;
+	this.element.style.display = 'table';
+//	this.displayDependants();
+};
 Pane.prototype.open = function () {
 	this.element.style.display = this.styleDisplay;
 	return this;

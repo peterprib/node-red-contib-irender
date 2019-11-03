@@ -7,18 +7,22 @@ function Menu(b,p,n,t) {
 		css.setClass(n,"MenuCell");
 	this.element=createElement("TABLE","Menu",n);
 	this.options={};
-	for(var option in p.options){
-		this.addOption(option,p.options[option]);
+	if(p.options instanceof Array) {
+		p.options.forEach((option,i)=>this.addOption(i,option));
+	} else {
+		for(var option in p.options){
+			this.addOption(option,p.options[option]);
+		}
 	}
 	if(!p.subMenu)
 		n.addEventListener('mousemove', this.mousemove.bind(this), false);	
 }
 Menu.prototype.addOption = function (o,p) {
-		this.options[o] = new MenuOption(this.base,p,this);
-	};
+	this.options[o] = new MenuOption(this.base,p,this);
+};
 Menu.prototype.appendChild = function (n) {
-		this.element.appendChild(n);
-	};
+	this.element.appendChild(n);
+};
 Menu.prototype.mousemove = function (e) {
 		//* resize
 		if (e.clientX > e.currentTarget.clientWidth) {

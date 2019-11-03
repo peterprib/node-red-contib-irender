@@ -133,9 +133,11 @@ ITableDataRender.prototype.displayRowRemove = function () {
 };
 ITableDataRender.prototype.error = function (err) {
     console.warn(err);
-    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
-	if(this.element.IRender) {
+	if(this.element.IRender && this.element.IRender.onLoadError) {
 		this.element.IRender.onLoadError(err);
+	} else {
+		this.clearPane();
+	    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
 	}
 };
 ITableDataRender.prototype.getData = function (url) {

@@ -109,11 +109,15 @@ IRender.prototype.add = function(p) {
 			p.forEach((c)=>this.add(c));
 		} else {
 			try{
+				if(!p.action) throw Error("action parameter not found");
+				if(!this[p.action]) throw Error("action "+p.action+" not found");
 				this[p.action](p);
 			} catch(e) {
-				console.error('IRender add error: '+e.message+" for "+p);
+				console.error('IRender add error: '+e.message+" for "+JSON.stringify(p));
 			}		
 		}
+	} else {
+		console.error("IRender.add passed nothing")
 	}
 	return this;
 };
@@ -245,10 +249,10 @@ IRender.prototype.insertHeader = function(n) {
 IRender.prototype.input = function(a,n) {
 	return this.tag("input",a,n);
 };
-IRender.prototype.options = function(id,o) {
-	var r="";
-	for(var i in o)
-		r+=this.tag("option",{label:i},o[i]);
+IRender.prototype.options = function(id,options) {
+	let r="";
+	for(let property in options)
+		r+=this.tag("option",{label:property},options[property]);
 	return this.tag("select",{id:id},r);
 };
 IRender.prototype.getLoadingPane = function() {
