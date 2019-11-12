@@ -100,9 +100,6 @@ IChart.prototype.setOptions=function (options) {
 	);
 	if(this.url===null) throw Error("Cannot render chart as url for table not specified");
 };
-IChart.prototype.display=function() {
-	this.dataStore.displayPane();
-};
 IChart.prototype.setDataStore=function(dataStore) {
 	this.dataStore=dataStore;
 };
@@ -191,6 +188,9 @@ IChart.prototype.drawChart_bar=function () {
 			});
 		}
 	}
+};
+IChart.prototype.display=function() {
+	this.dataStore.displayPane();
 };
 IChart.prototype.drawChart_bubble=function() {
 	const zDetails=this.columnIndexDetails.z,
@@ -336,6 +336,9 @@ IChart.prototype.processData=function(data) {
 	this.localDataSet=data;
 };
  */
+IChart.prototype.onError=function(error) {
+	alert(error);
+};
 IChart.prototype.processParameters=function(pageoptions) {
 	this.setOptions(pageoptions);
 	this.processAxis("y");

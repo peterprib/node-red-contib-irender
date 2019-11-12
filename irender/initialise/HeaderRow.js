@@ -1,10 +1,10 @@
 function HeaderRow(base,headerProperties,parentElement,options) {
-	if(!(headerProperties.right || headerProperties.title || headerProperties.closable ) ) {
+	Object.assign(this,options,headerProperties);
+	if(!(headerProperties.refresh || headerProperties.left || headerProperties.right || headerProperties.title || headerProperties.closable ) ) {
 		return;
 	}
 	this.base=base;
 	this.parent=parentElement;
-	Object.assign(this,options,headerProperties);
 	this.element=createElement("TR",(options&&options.style?options.style:"HeaderRow"),parentElement);
 	this.main=css.setClass(document.createElement("TABLE"),"FullSize");
 	this.element.appendChild(this.main);
@@ -16,6 +16,16 @@ function HeaderRow(base,headerProperties,parentElement,options) {
 	this.right=createElement("TD","HeaderRight",this.main);
 	if(headerProperties.closable) addCloseIcon(this,this.right);
 	if(headerProperties.right) this.addRight(headerProperties.right);
+	if(headerProperties.refresh) this.addRefresh(headerProperties.refresh);
+}
+HeaderRow.prototype.addRefresh = function (refresh) {
+	const headerRow=this,refreshIcon=css.setClass(document.createElement("A"),"icon");
+	this.left.appendChild(refreshIcon);
+	refreshIcon.addEventListener('click',()=>refresh.callFunction.apply(refresh.object,refresh.parameters), false);
+	refreshIcon.appendChild(this.base.getImage("refreshIcon"));
+	refreshIcon.appendChild(this.base.getImage("refreshIconOver","none"));
+	refreshIcon.addEventListener('mouseover', ()=>headerRow.setIcon(refreshIcon,"refreshIconOver"), false);
+	refreshIcon.addEventListener('mouseout', ()=>headerRow.setIcon(refreshIcon,"refreshIcon"), false);
 }
 HeaderRow.prototype.addRight = function (action) {
 	if(action instanceof Array) {
@@ -54,6 +64,17 @@ HeaderRow.prototype.onclickClose = function (ev) {
 	ev.stopPropagation();
 	this.pane.onclickClose(ev);
 };
+HeaderRow.prototype.setIcon = function (element,name) {
+	let image=element.firstChild;
+	while(image){
+		if(image.name==name) {
+			image.style.display="inline-block";
+		} else if(image.style.display!=="none") {
+			image.style.display="none";
+		}
+		image=image.nextSibling;
+	}
+}
 HeaderRow.prototype.setTitle = function (t) {
 	while (this.center.firstChild) {
 		this.center.removeChild(this.center.firstChild);

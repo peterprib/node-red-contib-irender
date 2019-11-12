@@ -8,13 +8,17 @@ function Action (b,p) {
 		throw Error(this.type+" action not valid");	
 	}
 };
-Action.prototype.exec_chart = function (node,ev,p) {
+Action.prototype.exec_chart = function (node,ev,properties) {
 	try{
 		const chart=new IChart(this.base,this.passing,{loadDefer:true}),
-			p=new Pane(this.base,Object.assign({tab:false},this.base.getPane(this.pane)),chart.element),
+			load={callFunction:chart.setData,object:chart,onError:chart.onLoadError},
+			p=new Pane(this.base,
+					Object.assign({tab:false,title:node.title||""},this.base.getPane(this.pane||"_tabPane"),this.passing),
+					chart.element
+				),
 			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
 			table=this.exec_table(floatingPane.getPane(),
-				Object.assign({onLoad:{callFunction:chart.setData,object:chart}},node.passing,this.passing)
+				Object.assign({onLoad:load},node.passing,this.passing)
 			);
 			chart.setDataStore(table);
 		node.setDetail(this.title,p.element);
@@ -22,6 +26,7 @@ Action.prototype.exec_chart = function (node,ev,p) {
 //		.addAction({id:"charDisplay",type:"floatingPane",function:floatingPane.show})
 
 		p.headerRow.addRight([{image:"tableIcon",action:"display",tableData:table}]); 
+		p.headerRow.addRefresh({callFunction:table.refresh,object:table}); 
 	} catch(ex) {
 		this.setCatchError(node,ex);
 	}
@@ -47,7 +52,7 @@ Action.prototype.exec_floatingPane = function (node,ev,p) {
 		return;
 	}
 	return new PaneFloat(this.base,
-		this.base.getPane(this.pane),  //paneProperties
+		this.base.getPane(this.pane||"_tabPane"),  //paneProperties
 		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,p),  // options
 		this.getTarget(node),
 		this  // action

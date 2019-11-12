@@ -92,9 +92,18 @@ function IRender() {
 //		loadingPage:"loadingpage_small.gif",
 		loadingPage:"chart/Three_gears.gif",
 		closeIcon:"close_s.gif",
+		refreshIcon:"windownav/refresh_small.gif",
+		refreshIconActive:"windownav/refresh_active.gif",
+		refreshIconDown:"windownav/refresh_mouseDown.gif",
+		refreshIconOver:"windownav/refresh_mouseOver.gif",
+		refreshIconTouch:"windownav/refresh_mouseOver_touch.gif",
 		tableIcon:"icon-index.gif"
 	};
 	this.imageBase="images/";
+	this.add([
+		{action:"addPane",id:"_tabPane"},
+		{action:"addPane",id:"error",title:"Error"}
+	]);
 	this.addAction({id:"folder",type:"folder"});
 	this.addPane({id:"error",title:"Error"});
 	this.addAction({id:"actionNotDefined",type:"floatingPane",pane:"error"
@@ -217,9 +226,11 @@ IRender.prototype.getBoundingClientRect = function() {
 IRender.prototype.getPaneDetail = function(id,node) {
 // 	for(var p=node.parentNode;node.name!=="";p=node.parentNode) continue;
 };
-IRender.prototype.getImage = function(n) {
+IRender.prototype.getImage = function(name,display) {
 	var i = new Image(16,16);
-	i.src=this.imageBase+this.images[n];
+	i.src=this.imageBase+this.images[name];
+	i.name=name;
+	if(display) i.style.display=display;
 	return i;
 };
 IRender.prototype.getPane = function(n) {

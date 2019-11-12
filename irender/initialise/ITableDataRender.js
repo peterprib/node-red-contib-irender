@@ -138,32 +138,46 @@ ITableDataRender.prototype.error = function (err) {
 	} else {
 		this.clearPane();
 	    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
+	    if(this.onLoad && this.onLoad.onError) {
+	    	this.onLoad.onError.apply(this.onload.object,[err]);
+	    }
 	}
 };
 ITableDataRender.prototype.getData = function (url) {
     if((url||"")=="/") throw Error("url not specified");
+    this.getUrl=url;
+    this.refresh();
+};
+ITableDataRender.prototype.refresh = function () {
     let base=this, httpRequest= new XMLHttpRequest();
     httpRequest.timeout = 10000; // time in milliseconds
     //httpRequest.ontimeout = function (e) {
         // XMLHttpRequest timed out. Do something here.
     //};
-
     httpRequest.onreadystatechange = function () {
         try {
             if (this.readyState === XMLHttpRequest.DONE) {
                 if (this.status === 200) {
                     base.processData(this.responseText);
                 } else {
-                    base.error('There was a problem with the get data request url:'+ url + ', status: '+this.status);
+                    base.error('There was a problem with the get data request url:'+ base.getUrl + ', status: '+this.status);
                 }
-            }
+            } 
         } catch( e ) {
             console.warn(e);
-            base.error('Caught Exception: ' + e.message + ' url:'+ url + ' data:'+this.responseText.substr(0,20));
+            base.error('Caught Exception: ' + e.message + ' url:'+ base.getUrl + ' data:'+this.responseText.substr(0,20));
         }
     };
-    httpRequest.open('GET', url);
-    httpRequest.send();
+    httpRequest.open('GET', base.getUrl);
+    httpRequest.onerror = function(){
+    	base.error("http get failed, check log for details");
+    }
+    try{
+        httpRequest.send();
+    } catch(e) {
+        console.error(e);
+    	base.error(e.message);
+    }
 }
 ITableDataRender.prototype.getHTMLTable = function () {
 	let mp,md,r,
@@ -202,8 +216,13 @@ ITableDataRender.prototype.processData = function (data) {
         this.setMapping(this.structure);
     }
     this.getHTMLTable();
-    if(this.onLoad)
-    	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
+    if(this.onLoad) {
+    	try{
+        	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
+    	} catch(e) {
+    		this.onError.callFunction.apply(this.onLoad.object,[e.toString()]);
+    	}
+    }
 };
 ITableDataRender.prototype.setLoading = function () {
 	if(this.element.IRender) {
