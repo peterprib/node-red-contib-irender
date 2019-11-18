@@ -100,17 +100,6 @@ IChart.prototype.setOptions=function (options) {
 	);
 	if(this.url===null) throw Error("Cannot render chart as url for table not specified");
 };
-IChart.prototype.setDataStore=function(dataStore) {
-	this.dataStore=dataStore;
-};
-IChart.prototype.setData=function(tableData) {
-	this.firstChartLoad=true;
-//	this.localDataSet=this.tableData.data; 
-	this.localDataSet=this.dataStore.Data;
-	if(this.flipDataSet)			
-		this.localDataSet.reverse();
-	this.buildDataSet();
-};
 IChart.prototype.buildDataSet=function() {
 	if(this.localDataSet.length <1 && this.onNoDataThrowError) throw Error('No data to chart');
 	delete this.columnIndexDetails;
@@ -390,6 +379,17 @@ IChart.prototype.setColorPallet=function() {
 		for(j=0;j<5;j++)
 			for(k=0;k<5;k++)
 				this.colorPallet[x++]='rgb(' + Math.floor(i*delta) + ',' + Math.floor(j*delta) + ','+ Math.floor(k*delta) +')';
+};
+IChart.prototype.setData=function(tableData) {
+	this.firstChartLoad=true;
+//	this.localDataSet=this.tableData.data; 
+	this.localDataSet=this.dataStore.Data;
+	if(this.flipDataSet)			
+		this.localDataSet.reverse();
+	this.buildDataSet();
+};
+IChart.prototype.setDataStore=function(dataStore) {
+	this.dataStore=dataStore;
 };
 IChart.prototype.setMenuOptions=function(menuArray=[]) {
 	let options=[];

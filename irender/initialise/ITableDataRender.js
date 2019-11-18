@@ -26,7 +26,10 @@
 	}
  */
 
-function ITableDataRender(element,urlData,md,mp,data) {
+function ITableDataRender(element,properties,md,mp,data) {
+	Object.assign(this,
+		(typeof properties =="string")?{url:properties}:properties
+	);
 	this.element=typeof element =="string"?document.getElementById(element):element;
 	if(md) {this.setMetaData(md);}
 	if(mp) {this.setMapping(mp);}
@@ -47,7 +50,7 @@ function ITableDataRender(element,urlData,md,mp,data) {
 			;
 	this.setLoading();  
 	try{
-        this.getData(urlData);
+        this.getData();
 	} catch(e) {
 	    this.error(e.message);
 	}
@@ -138,14 +141,15 @@ ITableDataRender.prototype.error = function (err) {
 	} else {
 		this.clearPane();
 	    this.css.createElement(this.element,"A","Error").appendChild(document.createTextNode("error: "+err));
-	    if(this.onLoad && this.onLoad.onError) {
-	    	this.onLoad.onError.apply(this.onload.object,[err]);
-	    }
 	}
+    if(this.onLoad && this.onLoad.onError) {
+		this.onLoad.onError.apply(this.onLoad.object,[err.toString()]);
+    }
 };
 ITableDataRender.prototype.getData = function (url) {
-    if((url||"")=="/") throw Error("url not specified");
-    this.getUrl=url;
+	if(url) this.url=url;
+    if((this.url||"")=="/") throw Error("url not specified");
+    this.getUrl=this.url;
     this.refresh();
 };
 ITableDataRender.prototype.refresh = function () {
@@ -220,7 +224,7 @@ ITableDataRender.prototype.processData = function (data) {
     	try{
         	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
     	} catch(e) {
-    		this.onError.callFunction.apply(this.onLoad.object,[e.toString()]);
+    		this.error(e);
     	}
     }
 };

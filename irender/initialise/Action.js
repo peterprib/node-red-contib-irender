@@ -11,12 +11,13 @@ function Action (b,p) {
 Action.prototype.exec_chart = function (node,ev,properties) {
 	try{
 		const chart=new IChart(this.base,this.passing,{loadDefer:true}),
-			load={callFunction:chart.setData,object:chart,onError:chart.onLoadError},
+			load={callFunction:chart.setData,object:chart,onError:null},
 			p=new Pane(this.base,
 					Object.assign({tab:false,title:node.title||""},this.base.getPane(this.pane||"_tabPane"),this.passing),
 					chart.element
 				),
-			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
+//			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
+			floatingPane=this.exec_floatingPane(chart.element,ev,{onCloseHide:true,initiallyHide:true}),
 			table=this.exec_table(floatingPane.getPane(),
 				Object.assign({onLoad:load},node.passing,this.passing)
 			);
@@ -52,7 +53,7 @@ Action.prototype.exec_floatingPane = function (node,ev,p) {
 		return;
 	}
 	return new PaneFloat(this.base,
-		this.base.getPane(this.pane||"_tabPane"),  //paneProperties
+		Object.assign({},this.base.getPane(this.pane||"_tabPane"),this.passing,p),  //paneProperties
 		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,p),  // options
 		this.getTarget(node),
 		this  // action
@@ -179,7 +180,9 @@ Action.prototype.exec_svg = function (node) {
 Action.prototype.exec_table = function (node,p) {
 	const div=css.setClass(document.createElement("DIV"),"FullSize");
 	div.IRender=node;
-	const tableData=new ITableDataRender(div,(node.passing||{}).url||p.url||this.url)
+	const tableData=new ITableDataRender(div,
+		Object.assign({}, p, {url: ((node.passing||{}).url||p.url||this.url) })
+	);
 	node.setDetail(node.title||this.title,div);
 	if(this.setDetail) this.setDetail.apply(node,[p]);
 	return tableData;

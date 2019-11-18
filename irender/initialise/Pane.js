@@ -96,7 +96,6 @@ Pane.prototype.open = function () {
 	this.element.style.display = this.styleDisplay;
 	return this;
 };
-Pane.prototype.onLoadError = Pane.prototype.setError;
 //Pane.prototype.sizeCenter = function () {
 //	this.centerNode.style.height= this.element.clientHeight
 //			-(this.headerNode?this.headerNode.element.getBoundingClientRect().Height:0)
@@ -125,6 +124,7 @@ Pane.prototype.setError = function(error) {
 	div.appendChild(this.base.getImage("alertBig"));
 	div.appendChild(createNode(error));
 	this.centerRow.replaceDetail(div);
+	this.display();
 	return this;
 }
 Pane.prototype.setFullSize = function (n) {
@@ -141,3 +141,4 @@ Pane.prototype.setTitle = function (t) {
 	this.headerRow.setTitle(t);
 	return this;
 };
+Pane.prototype.onLoadError = Pane.prototype.setError;
