@@ -3,44 +3,40 @@
  */
 if(!String.prototype.to)
     String.prototype.to = function (type) {
-		if (this==null) return null;
-		if (type==null) return value;
-		return this['to'+type.capitalize()];
+		return this==null?null:type==null?value:this['to'+type.capitalize()];
 	};
 if(!String.prototype.toTitle)
     String.prototype.toTitle = function () {
-			var title=this.substr(0,1).toUpperCase()
-				,lastLowerCase=false;
-			for(var i=1 ; i<this.length; i++ ) {
-				char=this.substr(i,1);
-				if(char==char.toUpperCase()) {
-					if(lastLowerCase) title+=' ';
-					lastLowerCase=false;
-					if(char=='_') continue;
-					if(char==' ') continue;
-				} else lastLowerCase=true;
-				title+=char;
-			}
-			return title;
-  		};
-
+		var title=this.substr(0,1).toUpperCase()
+			,lastLowerCase=false;
+		for(var i=1; i<this.length; i++) {
+			char=this.substr(i,1);
+			if(char==char.toUpperCase()) {
+				if(lastLowerCase) title+=' ';
+				lastLowerCase=false;
+				if(char=='_' ||	char==' ') continue;
+			} else lastLowerCase=true;
+			title+=char;
+		}
+		return title;
+  	};
 if(!String.prototype.toReal)
     String.prototype.toReal = function () {
 		return parseFloat(this);
-		};
+	};
 if(!String.prototype.toInt)
     String.prototype.toInt = function () {
 		return parseInt(this);
-		};
+	};
 if(!String.prototype.toTimestamp)
     String.prototype.toTimestamp = function () {
 		return Date.parse(this.substr(0,4)+'/'+this.substr(5,2)+'/'+this.substr(8,11))
 			+ parseInt(this.substr(21,3));
-		};
+	};
 if(!String.prototype.toTime)
     String.prototype.toTime = function () {
 		return  Date.parse(this);
-		};
+	};
 if(!String.prototype.toDatetime)
     String.prototype.toDatetime = String.prototype.toTime;
 if(!String.prototype.toDate)
@@ -48,61 +44,44 @@ if(!String.prototype.toDate)
 if(!String.prototype.CRLF2BR)
     String.prototype.CRLF2BR = function () {
 		return  this.replace("\n\r","<br/>").replace("\n","<br/>");
-		};
-
+	};
 
 function IFormat(options) {
 	Object.assign(this,{format:"auto"},options);
 	this.formatter=this[this.format];
 	return this;
 }
-IFormat.prototype.toHTML = function () {
-		return document.createTextNode(this.formatter.apply(this,arguments));
+IFormat.prototype.toHTML = function() {
+	return document.createTextNode(this.formatter.apply(this,arguments));
 };
 IFormat.prototype.auto = function (v) {
 	this.formatter=IFormat.prototype.copy;
 	return this.formatter.apply(this,arguments);
 };
-IFormat.prototype.copy = function (v) {
-		return v;
-};
-
+IFormat.prototype.copy = (v)=>v;
 IFormat.prototype.dateTypes = ["date","time","datetime","timestamp"];
+IFormat.prototype.dateTimeTypes = IFormat.prototype.dateTypes;
+IFormat.prototype.isDateTime=((type)=>IFormat.prototype.dateTimeTypes.includes(type));
 IFormat.prototype.numberTypes = ['real','double','int','number','bigint'];
+IFormat.prototype.isNumber=((type)=>IFormat.prototype.numberTypes.includes(type));
 IFormat.prototype.measureTypes = IFormat.prototype.numberTypes.concat(IFormat.prototype.dateTypes);
 IFormat.prototype.isMeasure=((type)=>IFormat.prototype.measureTypes.includes(type));
 IFormat.prototype.stringTypes = ['string'];
 IFormat.prototype.isString=((type)=>IFormat.prototype.stringTypes.includes(type));
 IFormat.prototype.clone = IFormat.prototype.copy;
 IFormat.prototype.noChange = IFormat.prototype.copy;
-IFormat.prototype.getStringAfterDelimiter = function (v) {
-	return getStringAfterDelimiter(v,wordPosition,delimiter);
-};
-IFormat.prototype.padLeadZero = function(value,size) {
-	return "000000000000".substr(0,size-value.toString().length)+value;
-};
-IFormat.prototype.regexp = function (v) {
-	return v.split(this.regPattern,1)[0];
-};
-IFormat.prototype.substr = function (v) {
-	if(isNaN(stringLength))
-    	return v.substr(startPosition);
-	else
-    	return v.substr(startPosition,stringLength);
-};
-IFormat.prototype.substring = function (v) {
-	if(isNaN(stringLength))
-    	return v.substring(startPosition);
-	else
-    	return v.substring(startPosition,stringLength);
-};
-IFormat.prototype.word = function (v) {
+IFormat.prototype.getStringAfterDelimiter = (v)=>getStringAfterDelimiter(v,wordPosition,delimiter);
+IFormat.prototype.padLeadZero = (value,size)=>"000000000000".substr(0,size-value.toString().length)+value;
+IFormat.prototype.regexp = function(v) {return v.split(this.regPattern,1)[0];};
+IFormat.prototype.substr = (v)=>isNaN(stringLength)?v.substr(startPosition):v.substr(startPosition,stringLength);
+IFormat.prototype.substring = (v)=>isNaN(stringLength)?v.substring(startPosition):v.substring(startPosition,stringLength);
+IFormat.prototype.word = (v)=>{
 	try{
 		return v.split(wordPattern,wordPositionLimit)[wordPosition];
 	} catch(e) {}
 	return ""; 
 };
-IFormat.prototype.toDuration = function (v) {
+IFormat.prototype.toDuration = (v)=>{
 	v=parseFloat(v);
 	var r="",t;
 	if(v>=60) {
@@ -128,19 +107,11 @@ IFormat.prototype.toDuration = function (v) {
 };
 IFormat.prototype.parseFloat = parseFloat;
 IFormat.prototype.parseInt = parseInt;
-IFormat.prototype.toExponential = function (v) {
-	return Number(v).toExponential(Options.toExponentialVal);
-};
-IFormat.prototype.toFixed = function (v) {
-	return Number(v).toFixed(Options.toFixedVal);
-};
-IFormat.prototype.toPrecision = function (v) {
-	return Number(v).toPrecision(Options.toPrecisionVal);
-};
-IFormat.prototype.toBase = function (v) {
-	return Number(v).toString(Options.toBaseVal);
-};
-IFormat.prototype.number = function (v) {
+IFormat.prototype.toExponential = (v)=>Number(v).toExponential(Options.toExponentialVal);
+IFormat.prototype.toFixed = (v)=>Number(v).toFixed(Options.toFixedVal);
+IFormat.prototype.toPrecision = (v)=>Number(v).toPrecision(Options.toPrecisionVal);
+IFormat.prototype.toBase = (v)=>Number(v).toString(Options.toBaseVal);
+IFormat.prototype.number = (v)=>{
 	v = Number(v);
 	if(Options.separator) {
 		var valueString=v.toString().split('.');
@@ -158,40 +129,24 @@ IFormat.prototype.number = function (v) {
 		}
 	}
 };
-IFormat.prototype.toAbbreviatedNumber = function (v) {
-	return formatNumberToAbbreviated(v);
-};
-IFormat.prototype.appendAbbreviatedNumber = function (v) {
-	return v + " ("+this.toAbbreviatedNumber(v)+")";
-};
-IFormat.prototype.prependAbbreviatednumber = function (v) {
-	return this.toAbbreviatedNumber(v) + " ("+v+")";
-};
-IFormat.prototype.wrap = function (v) {
-	return Options.pre + v + Options.post;
-};
-IFormat.prototype.toYesNo = function (v) {
-	return v=="y"||v=="1"||v==1?'Yes':"No";
-};
-IFormat.prototype.toBoolean = function (v) {
-	return v=="t"||v=="1"||v==1?"True":'False';
-};
-IFormat.prototype.normalize = function (v) {
-	return (this.normalizer==0 ? null : v/this.normalizer);
-};
-IFormat.prototype.percent = function (v) {
-	return 100*this.normalize(v);
-};
+IFormat.prototype.toAbbreviatedNumber = (v)=>formatNumberToAbbreviated(v);
+IFormat.prototype.appendAbbreviatedNumber = (v)=>v+" ("+IFormat.toAbbreviatedNumber(v)+")";
+IFormat.prototype.prependAbbreviatednumber = (v)=>IFormat.toAbbreviatedNumber(v) + " ("+v+")";
+IFormat.prototype.wrap = (v)=>Options.pre + v + Options.post;
+IFormat.prototype.toYesNo = (v)=>v=="y"||v=="1"||v==1?'Yes':"No";
+IFormat.prototype.toBoolean = (v)=>v=="t"||v=="1"||v==1?"True":'False';
+IFormat.prototype.normalize = function(v) {return (this.normalizer==0 ? null : v/this.normalizer)};
+IFormat.prototype.percent = function(v) {return 100*this.normalize(v)};
 IFormat.prototype.percent = IFormat.prototype.percentage;
 
-IFormat.prototype.format = function (value,datatype,precision) {
+IFormat.prototype.format = (value,datatype,precision)=>{
 	try{
 		return IForm["format"+datatype](value,precision);
 	} catch(e) {
 		return value;
 	}
 };
-IFormat.prototype.formatAbbreviate = function (value,datatype,precision) {
+IFormat.prototype.formatAbbreviate = (value,datatype,precision)=>{
 	try{
 		return IForm["format"+datatype+"Abbrev"](value,precision);
 	} catch(e) {
@@ -209,7 +164,7 @@ IFormat.prototype.formatTime = function (tsIn,precision) {
 IFormat.prototype.formattime = IFormat.prototype.formatTime;
 IFormat.prototype.formattimeAbbrev = IFormat.prototype.formatTime;
 
-IFormat.prototype.formatDate = function (tsIn,precision) {
+IFormat.prototype.formatDate = (tsIn,precision)=>{
 	const ts=ts instanceof Date? tsIn : (new Date()).setTime(parseInt(tsIn));
 	let d="";
 	if(precision >= 1440) d+=ts.getFullYear()+'-';
@@ -220,7 +175,7 @@ IFormat.prototype.formatDate = function (tsIn,precision) {
 };
 IFormat.prototype.formatdate = IFormat.prototype.formatDate;
 IFormat.prototype.formatdateAbbrev = IFormat.prototype.formatDate;
-IFormat.prototype.formatTimestamp = function (tsIn,precision) {
+IFormat.prototype.formatTimestamp = (tsIn,precision)=>{
 	const ts=ts instanceof Date? tsIn : (new Date()).setTime(parseInt(tsIn));
 	if(precision >= 1440) ts+=ts.getFullYear()+'-';
 	if(precision >= 1440) ts+=IFormat.padLeadZero(ts.getMonth()+1,2)+'-';
@@ -234,9 +189,9 @@ IFormat.prototype.formatTimestamp = function (tsIn,precision) {
 IFormat.prototype.formatDateTime = IFormat.prototype.formatTimestamp;
 IFormat.prototype.formatdatetime = IFormat.prototype.formatTimestamp;
 IFormat.prototype.formatdatetimeAbbrev = IFormat.prototype.formatTimestamp;
-IFormat.prototype.formatToString = (v=>v.toString());
+IFormat.prototype.formatToString = (v)=>v.toString();
 
-IFormat.prototype.formatNumberToAbbreviated = function(value) {
+IFormat.prototype.formatNumberToAbbreviated = (value)=>{
 	let isAbbreviated=true;
 	if(typeof value!='number') value=parseFloat(value);
 	if (value>Math.pow(10,16)) valueAbbr = Math.round(value/Math.pow(10,15)).toString()+'P';
@@ -268,3 +223,24 @@ IFormat.prototype.formatnumberAbbrev = IFormat.prototype.formatNumberToAbbreviat
 IFormat.prototype.formatrealAbbrev = IFormat.prototype.formatReal;
 IFormat.prototype.formatintAbbrev = IFormat.prototype.formatInt;
 
+IFormat.prototype.dataConversionFunc={
+	"real": function(value) {return parseFloat(value);}
+	,"int": function(value) {return parseFloat(value);}
+	,"number": function(value) {return parseFloat(value);}
+	,"timestamp": function(value) {
+		return Date.parse(value.substr(0,4)+'/'+value.substr(5,2)+'/'+value.substr(8,11))
+		+ parseInt(value.substr(21,3));
+	}
+	,"time": function(value) {return Date.parse(value);}
+	,"datetime": function(value) {return Date.parse(value);}
+	,"date": function(value) {return Date.parse(value);}
+};
+IFormat.prototype.dataConversion=(type,value)=>{
+	if(value==null) return null;
+	if(IFormat.prototype.dataConversionFunc[type]==null) return value;
+	try{
+		return IFormat.prototype.dataConversionFunc[type](value);
+	} catch(e) {
+		throw Error("data conversion error data type: " +type + ' value: "'+ value +'"');
+	}
+};

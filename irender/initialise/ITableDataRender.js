@@ -1,11 +1,11 @@
 /*
  * response: { 
  * 	structure: [
- * 			{name:"name",column:this.name,title:"title"}
+ * 			{name:"name",column:this.name,title:"title",type:"string"}
  * 			]
  * 	data: [[col1,col2]]
  * }
- * ths.columns={columnName:{offset:0,name:"name",column:this.name,title:"title"},...}
+ * this.columns={columnName:{offset:0,name:"name",column:this.name,title:"title"},...}
  * 
  * 	this.metaData=md;
 	this.columns={};
@@ -31,6 +31,7 @@ function ITableDataRender(element,properties,md,mp,data) {
 		(typeof properties =="string")?{url:properties}:properties
 	);
 	this.element=typeof element =="string"?document.getElementById(element):element;
+	this.iFormat=new IFormat();
 	if(md) {this.setMetaData(md);}
 	if(mp) {this.setMapping(mp);}
 	this.data=data||[];
@@ -184,28 +185,25 @@ ITableDataRender.prototype.refresh = function () {
     }
 }
 ITableDataRender.prototype.getHTMLTable = function () {
-	let mp,md,r,
-		t=this.css.createElement(null,"TABLE","Table");
-
+	const t=this.css.createElement(null,"TABLE","Table");
 	this.tbody=this.css.createElement(t,"TBODY","TableBody");
-	tHeadRow=this.css.createElement(this.tbody,"TR");
+	const tHeadRow=this.css.createElement(this.tbody,"TR");
 	t.addEventListener('contextmenu', this.contextmenu.bind(this), false);
 	this.css.createElement(tHeadRow,"TD","Cell0");
 	let dl=this.data.length;
 	for(let i=0; i<dl ;i++) {  // define all row label cells
-		const r=this.css.createElement(this.tbody,"TR");
-		this.css.createElement(r,"TD","Left");
+		this.css.createElement(this.css.createElement(this.tbody,"TR"),"TD","Left");
 	}
 	this.clearPane();
     this.element.appendChild(t);
 	
 	for(let ml=this.mapping.length,m=0; m<ml; m++) { //columns
-		mp=this.mapping[m];
-		md=this.metaData[mp.offset];
-		this.css.createElement(tHeadRow,"TD","Head").appendChild(document.createTextNode(md.title));
+		const mp=this.mapping[m];
+//		const md=this.metaData[mp.offset];
+		mp.appendCellTitle(tHeadRow,this.css);
 		for(let i=0; i<dl ;i++) {
-			r=this.tbody.rows[i+1];
-			this.css.createElement(r,"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
+			mp.appendCellData(this.tbody.rows[i+1],this.css,this.data[i]);
+//			this.css.createElement(this.tbody.rows[i+1],"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
 		}
 	}
 	return t;
@@ -235,46 +233,37 @@ ITableDataRender.prototype.setLoading = function () {
 		} else {
 			this.element.IRender.base.setLoading(this.element);
 		}
-		return;
+	} else {
+	    this.element.appendChild(document.createTextNode("Loading "));
 	}
-    this.element.appendChild(document.createTextNode("Loading "));
 };
 ITableDataRender.prototype.setMetaData = function (md) {
 	this.metaData=md;
 	this.columns={};
-	for(let n,i=0;i<md.length;i++) {
-		if(md[i].name) {
-			n=md[i].name;
-			if(!md[i].column) md[i].column=n
-		} else if(md[i].column) {
-			n=md[i].column;
-			md[i].name=n;
-		} else {
-			n="col"+(i+1);
-			md[i].name=n;
-			md[i].column=n;
-		}
-		if(!md[i].title) md[i].title=n;
-		this.columns[n]=Object.assign({offset:i},md[i]);
-	}
+	md.forEach((c,i)=>{
+		if(!c.name) c.name=c.column||"col"+(i+1);
+		const column=new Column({offset:i,type:c.type?undefined:this.data.length==0?"string":typeof this.data[0][i]},c);
+		this.columns[column.name]=column;
+	});
 	return this;
 };
 ITableDataRender.prototype.setMapping = function (m) {
-		this.mapping=[];
-		for(let c,i=0;i<m.length;i++) {
-			c=m[i];
-			let offset=typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1;
-			this.mapping.push( {format:(new IFormat(c)),offset:offset} );
-		}
-		return this;
-	};
+	this.mapping=m.map(c=>{
+		const column=this.columns[c.name];
+//		.map(c=>{//			format:(new IFormat(c))
+//		column.offset=(typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1);
+		return column;
+	});
+};
 ITableDataRender.prototype.transform = function (d) {
-	for(let o, dl=d.length,i=0; i<dl ;i++) {
-		for(let ml=this.mapping.length,m=0; m<ml; m++) {
-			o+=this.mapping[m].format.formatter(d[this.mapping[m].column])																										;
-		}
-	}
-	return o;
+	return d.reduce(
+		(accumlatorRow,row)=>
+			accumlatorRow+this.mapping.reduce(
+				(accumlatorColumn,column)=>accumlatorColumn+column.format.formatter(row[column.name]),
+				""
+			),
+		""
+	);
 };
 ITableDataRender.prototype.unhideRowAll = function (ev) {
 	for(let r=0;r<this.tbody.childNodes[0].childElementCount;r++) {
