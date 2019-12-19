@@ -9,6 +9,9 @@ function Column() {
 Column.prototype.isMeasure = function() {
 	return this.iFormat.isMeasure(this.type);
 };
+Column.prototype.isTimestamp = function() {
+	return this.iFormat.isTimestamp(this.type);
+};
 Column.prototype.appendCellTitle = function(row,css) {
 	css.createElement(row,"TD","Head").appendChild(document.createTextNode(this.title));
 };

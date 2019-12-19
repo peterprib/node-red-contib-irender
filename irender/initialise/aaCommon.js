@@ -37,8 +37,7 @@ function createDiv (f) {
 }
 function createNode(nodeDetails) {
 	if(nodeDetails.constructor === String) return document.createTextNode(nodeDetails);
-	if(nodeDetails.constructor === TypeError) return document.createTextNode(nodeDetails.toString());
-	throw Error("createNode unknown type, "+JSON.stringify(nodeDetails));
+	return document.createTextNode(nodeDetails.toString());
 };
 function createTable(rows,cols) {
 	var t=document.createElement("TABLE");
