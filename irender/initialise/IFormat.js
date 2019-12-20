@@ -153,7 +153,7 @@ IFormat.prototype.formatAbbreviate = (value,datatype,precision)=>{
 	try{
 		return IForm["format"+datatype+"Abbrev"](value,precision);
 	} catch(e) {
-		return value;
+		return value.toString();
 	}
 };
 IFormat.prototype.formatTime = function (tsIn,precision) {

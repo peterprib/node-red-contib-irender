@@ -37,6 +37,7 @@ IChart.prototype.setOptions=function (options) {
 			width:100,
 			pie:{label:{font:{size:10}}},
 			axis:{
+				offset:30,
 				x:{
 					name:null,
 					line:{width:1,color:"black"},
@@ -58,7 +59,6 @@ IChart.prototype.setOptions=function (options) {
 		},
 		highlight:null,
 		outline:'black',
-//		display:'chart',
 		tickIncrement:5,
 		scaleUpOnly:false,
 		scaleDownOnly:false,
@@ -328,18 +328,11 @@ IChart.prototype.drawAxisLine=function() {
 		x1:xAxis.position+0.5,y1:yAxis.position,
 		x2:this.chart.width,y2:yAxis.position,stroke:"black","stroke-width":1});
 	// x ticks
-	const baseDraw={action:"text",x:0,y:this.chart.height-this.axisOffset/2,"font-size":xAxis.text.size,"text-anchor":"middle"};
-//
 	if(this.isBubbleOrLine) {
 		const dataType=this.dataType[0],precision=this.precision[0];
-/*		if(this.xTicks.length>1) {
-			const axisLabel=this.iFormat.formatter(this.xTicks[0],dataType,precision);
-			this.graph(baseDraw,{"text-anchor":"end",children:[axisLabel]});
-		}
-*/		this.xTicks.forEach((tick,i)=>{
+		this.xTicks.forEach((tick,i)=>{
 			const axisLabel=this.iFormat.formatter(tick,dataType,precision);
-			this.drawAxisTickX(this.xPositionScale(tick));
-			this.graph(baseDraw,{children:[axisLabel]});
+			this.drawAxisTickX(this.xPositionScale(tick),axisLabel);
 		});
 	} else if(this.isCartezian) {
 		this.graph({action:"line",x1:xAxis.position+0.5,y1:yAxis.position,x2:xAxis.position+0.5,
@@ -347,39 +340,42 @@ IChart.prototype.drawAxisLine=function() {
 			stroke:"black","stroke-width":xAxis.line.width
 		});
 		this.tickIncrement=this.xTicks.length==0?this.xMax:Math.floor(this.xMax/(this.xTicks.length+1));
-		const k=Math.ceil(50/this.tickIncrement);
+		const k=Math.ceil(50/this.tickIncrement),
+			axisOffset=this.chart.axis.offset;
 		for(let i=0; i<this.xTicks.length; i+=k) {
-			const pos=this.axisOffset+this.tickIncrement*(i+1)-(this.chart.type=='setline'?this.tickIncrement:0);
-			this.drawAxisTickX(pos);
-			const type=this.dataType[0];
 			if(this.columnIndex[0] && this.data[i]) next;
-			if(this.iFormat.isDateTime(type)) {
-				this.graph(baseDraw,{children:[this.data[i][0].toString()]});
-			} else if(this.iFormat.isNumber(type)) {
-				this.graph(baseDraw,{children:[axisLabel]});
-			} else {
-				this.graph(baseDraw,{children:[this.dataToString(1,this.yTicks[i])]});
-			}
+			const pos=axisOffset+this.tickIncrement*(i+1)-(this.chart.type=='setline'?this.tickIncrement:0);
+			const type=this.dataType[0];
+			const label=this.iFormat.isDateTime(type)?this.data[i][0].toString()
+					:this.iFormat.isNumber(type)?axisLabel:this.dataToString(1,this.yTicks[i]);
+			this.drawAxisTickX(pos,label);
 		}
 	}
 	// y axis
 	this.graph({action:"line",x1:xAxis.position,y1:yAxis.position,x2:xAxis.position,
-		y2:0+(this.chart.type=='setline' ? this.tickIncrement : 0 ),
+		y2:this.chart.type=='setline'? this.tickIncrement:0,
 		stroke:"black","stroke-width":yAxis.line.width
 	});
 	// y ticks
 	this.yTicks.forEach(tick=>{
 		const pos=this.yPositionScale(tick);
-		this.drawAxisTickY(pos);
-		this.graph({action:"text",x:0,y:pos+3,"text-anchor":"begin","font-size":yAxis.text.size,children:[this.dataToString(1,tick)]});
+		this.drawAxisTickY(pos,this.dataToString(1,tick));
 	});
 };
-IChart.prototype.drawAxisTickX=function(x) {
-	this.graph({action:"line",x1:x+0.5,y1:this.chart.axis.y.position+5,x2:x+0.5,y2:this.chart.axis.y.position-5,stroke:"black","stroke-width":this.chart.axis.x.tick.width});
+IChart.prototype.drawAxisTickX=function(x,label) {
+	const y=this.chart.axis.y.position;
+	const textSize=this.chart.axis.x.text.size
+	this.graph({action:"line",x1:x,y1:y+5,x2:x,y2:y-5,stroke:"black","stroke-width":this.chart.axis.x.tick.width});
+	if(label)
+		this.graph({action:"text",x:x,y:y+10+textSize/2,"font-size":textSize,"text-anchor":"end",children:[label]});
+
 };
-IChart.prototype.drawAxisTickY=function(y) {
+IChart.prototype.drawAxisTickY=function(y,label) {
 	if(y==Infinity || y==-Infinity) return;
-	this.graph({action:"line",x1:this.chart.axis.x.position+5,y1:y+0.5,x2:this.chart.axis.x.position-5,y2:y+0.5,stroke:"black","stroke-width":this.chart.axis.x.tick.width});
+	const x=this.chart.axis.x.position;
+	this.graph({action:"line",x1:x+5,y1:y,x2:x-5,y2:y,stroke:"black","stroke-width":this.chart.axis.x.tick.width});
+	this.graph({action:"text",x:x-6,y:y,"text-anchor":"end","font-size":this.chart.axis.y.text.size,children:[label]});
+
 };
 IChart.prototype.drawChart=function() {
 	let errors;
@@ -689,10 +685,10 @@ IChart.prototype.renderTableData=function() {
 IChart.prototype.resizeChart=function() {
 	const paneSize=this.getPaneSize(),
 		axisX=this.chart.axis.x,
-		axisY=this.chart.axis.y;
+		axisY=this.chart.axis.y,
+		axisOffset= this.chart.axis.offset;
 	this.chart.width=paneSize.width;
 	this.chart.height=paneSize.height;
-	this.axisOffset= 40;
 	const colY=this.columnIndexDetails.y;
 	if(this.iFormat.isMeasure(this.dataType[0])) {
 		if(this.columnIndex[0]==null) {
@@ -703,16 +699,16 @@ IChart.prototype.resizeChart=function() {
 			this.dataMin[0]=this.dataMax[0]-1;
 			this.dataMax[0]=this.dataMax[0]+1;
 		} 
-		axisX.position=this.axisOffset;
-		this.xMax=this.chart.width-this.axisOffset-6;
+		axisX.position=axisOffset;
+		this.xMax=this.chart.width-axisOffset-6;
 		this.xRatio=this.xMax/(this.dataMax[0]-this.dataMin[0]);
 		this.xOffset=this.chart.axis.x.position-this.scaleX(this.dataMin[0]);
 		this.xTicks=this.calculateTicks(this.dataMax[0],this.dataMin[0],this.dataType[0],0);
 	} else if(this.iFormat.isString(this.dataType[0]) && this.isCartezian) {
-		axisX.position=this.axisOffset;
-		this.xMax=this.chart.width-this.axisOffset;
+		axisX.position=axisOffset;
+		this.xMax=this.chart.width-axisOffset;
 	}
-	axisY.position=this.chart.height-this.axisOffset;
+	axisY.position=this.chart.height-axisOffset;
 	this.yMax=axisY.position-5;
 	this.dataMinYAxis=axisY.lowerBound||this.isCartezian?0:this.dataMax[1];
 	this.dataMaxYAxis=axisY.upperBound||this.isCartezian?0:this.dataMin[1];
@@ -1053,14 +1049,12 @@ IChart.prototype.setParameter=function(element) {
 };
 IChart.prototype.plot=function(y, offset, data,transparency=1) { 
 	if(data.length==0) return;
-	let dataY,dataX,plotX,plotY,last,color=this.colors[y * offset];
-	const baseAttributes={stroke:color,"stroke-width":this.lineWidth,fill:color,"fill-opacity":transparency};
+	const color=this.colors[y * offset],
+		baseAttributes={stroke:color,"stroke-width":this.lineWidth,fill:color,"fill-opacity":transparency};
 	if(data.length==1 || this.highlight=='first') {
-		dataX=this.data[0][0];
-		dataY=data[0][y];
+		const dataX=this.data[0][0], dataY=data[0][y];
 		if((dataX||dataY)==null) return;
-		plotX=this.xPositionScale(dataX);
-		plotY=this.yPositionScale(dataY);
+		const plotX=this.xPositionScale(dataX),	plotY=this.yPositionScale(dataY);
 		this.graph(baseAttributes,this.showPoints
 				?{action:"circle",cx:plotX,cy:plotY,r:3}
 				:{action:"rect",x:plotX-3,y:plotX-3,width:6,height:6});
@@ -1069,7 +1063,7 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 	let errors,points=[];
 	data.forEach((row,x)=>{
 		try{
-			const datax=row[0],dataY=row[y];
+			const dataX=row[0],dataY=row[y];
 			if(dataX==null || dataY==null || isNaN(dataX) || isNaN(dataY)) {
 				if(points.length>0) {
 					this.graph(baseAttributes,{action:"polyline",points:points.join(" "),stroke:color});
@@ -1101,7 +1095,7 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 			if(dataY)
 				this.graph(baseAttributes,{action:"circle",cx:this.xPositionScale(row[0]),cy:dataY,r:3});
 		});
-	if(errors!=null) throw Error(errors);
+	if(errors) throw Error(errors);
 };
 IChart.prototype.plotSet=function(y, offset, data) {
 	let points="";
