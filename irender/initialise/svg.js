@@ -38,7 +38,7 @@ function Svg(base,properties,options) {
 }
 //						this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign({},shapes[this.shape],this.getMapping()));
 Svg.prototype.addBase=function() {
-	this.base=this.drawObject({action:"g",id:"base"});
+	this.base=this.drawObject({action:"g",id:"base",onclick:this.onclick});
 }
 Svg.prototype.addLegend=function(properties) {
 	this.legend=Object.assign({position:{vertical:"top",horizontal:"right"}},properties===true?null:properties);
@@ -707,4 +707,35 @@ Svg.prototype.getMoveTransform=function(element,from,to) {
 		element.transform.baseVal.insertItemBefore(translate, 0);  // Add to front of transforms list
 	}
 	return transforms.getItem(0); 	// Get initial translation amount
+};
+
+Svg.prototype.displayObjectDetailsEnd=function(evt) {
+	const displayElement=evt.target;
+	displayElement.removeEventListener('mouseleave', this.displayObjectDetailsEnd.bind(this), false);
+	displayElement.removeEventListener('touchend', this.displayObjectDetailsEnd.bind(this), false);
+	displayElement.removeEventListener('touchleave', this.displayObjectDetailsEnd.bind(this), false);
+	displayElement.removeEventListener('touchcancel', this.displayObjectDetailsEnd.bind(this), false);
+	delete displayElement;
+};
+Svg.prototype.displayObjectDetailsStart=function(evt) {
+	const svgElement=evt.target,
+		displayData=svgElement.getAttribute("displayData");
+	if(!displayData) return;
+	displayElement=this.createElement("TABLE");
+	for(var property in displayData)
+		this.createDisplayRow(displayElement,property,displayData[property]);
+	displayElement.addEventListener('mouseleave', this.displayObjectDetailsEnd.bind(this));
+	displayElement.addEventListener('touchend', this.displayObjectDetailsEnd.bind(this));
+	displayElement.addEventListener('touchleave', this.displayObjectDetailsEnd.bind(this));
+	displayElement.addEventListener('touchcancel', this.displayObjectDetailsEnd.bind(this));
+};
+Svg.prototype.createElement=function(e,n){
+	var en=document.createElement(e);
+	if(n) n.appendChild(en);
+	return en;
+};
+Svg.prototype.createDisplayRow=function(table,property,detail){
+	const row=this.createElement("TR",table)
+	this.createElement("TD",row).appendChild(document.createTextNode(property));
+	this.createElement("TD",row).appendChild(document.createTextNode(detail));
 };
