@@ -478,7 +478,7 @@ IChart.prototype.drawChart_pie=function() {
 	if(this.chart.height==0  || this.chart.width==0) return;
 	let piesCount=(this.slices=='row'?this.columnIndexDetails.y.size+1:this.data.length),
 		squareSize=Math.sqrt((this.chart.height*this.chart.width)/(piesCount+1));
-	squareSize=Maths.min(squareSize,this.chart.height,this.chart.width)
+	squareSize=Math.min(squareSize,this.chart.height,this.chart.width)
 	
 	if(squareSize<30)
 		throw Error('Not enough space to draw pie chart, number of charts: '+piesCount+' chart width:' + this.chart.width + 'height:' + this.chart.height);
@@ -581,15 +581,15 @@ IChart.prototype.onError=function(error) {
 };
 IChart.prototype.plot=function(y, offset, data,transparency=1) { 
 	if(data.length==0) return;
-	const color=this.colors[y * offset],
-		baseAttributes={stroke:color,"stroke-width":this.lineWidth,fill:color,"fill-opacity":transparency};
+	const color=this.colors[y],
+		baseAttributes={action:"polyline",stroke:color,"stroke-width":this.lineWidth,fill:"none","fill-opacity":transparency};
 	if(data.length==1 || this.highlight=='first') {
 		const dataX=this.data[0][0], dataY=data[0][y];
 		if((dataX||dataY)==null) return;
 		const plotX=this.xPositionScale(dataX),	plotY=this.yPositionScale(dataY);
-		this.graph(baseAttributes,this.showPoints
-				?{action:"circle",cx:plotX,cy:plotY,r:3}
-				:{action:"rect",x:plotX-3,y:plotX-3,width:6,height:6});
+		this.graph(basePointAttributes,this.showPoints
+				?{action:"circle",cx:plotX,cy:plotY,r:3,fill:color}
+				:{action:"rect",x:plotX-3,y:plotX-3,width:6,height:6,fill:color});
 		if(data.length==1) return;
 	}
 	let errors,points=[];
@@ -598,9 +598,9 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 			const dataX=row[0],dataY=row[y];
 			if(dataX==null || dataY==null || isNaN(dataX) || isNaN(dataY)) {
 				if(points.length>0) {
-					this.graph(baseAttributes,{action:"polyline",points:points.join(" "),stroke:color});
+					this.graph(baseAttributes,{points:points.join(" ")});
 					if(points.length==1 && !this.showPoints) 
-						this.graph(baseAttributes,{action:"rect",
+						this.graph(baseAttributes,{action:"rect",fill:color,
 							x:this.xPositionScale(this.data[x-1][0])-3,
 							y:this.scaleY(data[x-1][y])-3,
 							width:6,height:6
@@ -612,20 +612,20 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 			points.push(this.xPositionScale(dataX)+","+this.yPositionScale(dataY));
 		} catch (e) {
 			errors += " x: " + dataX + " ( " + plotX + " ) " + " y: " + dataY + " ( " + plotY + " ) " + "\n" + e + "\n";
-			this.graph(baseAttributes,{action:"polyline",points:points.join(" "),stroke:color});
+			this.graph(baseAttributes,{points:points.join(" ")});
 			points=[];
 		} 
 	});
 	if(points.length>0) {
-		this.graph(baseAttributes,{action:"polyline",id:"polyline",points:points.join(" "),stroke:color});
+		this.graph(baseAttributes,{points:points.join(" ")});
 		if(( points.length==1 || this.highlight=='last' ) && !this.showPoints) 
-			this.graph(baseAttributes,{action:"rect",id:"rect",x:plotX-3,y:plotX-3,width:6,height:6});
+			this.graph(baseAttributes,{action:"rect",fill:color,x:plotX-3,y:plotX-3,width:6,height:6});
 	}  
 	if(this.showPoints)
 		data.forEach(row=>{
 			dataY=this.yPositionScale(row[y]);
 			if(dataY)
-				this.graph(baseAttributes,{action:"circle",cx:this.xPositionScale(row[0]),cy:dataY,r:3});
+				this.graph(baseAttributes,{action:"circle",fill:color,cx:this.xPositionScale(row[0]),cy:dataY,r:3});
 		});
 	if(errors) throw Error(errors);
 };
@@ -764,8 +764,8 @@ IChart.prototype.resizeChart=function() {
 	const colY=this.columnIndexDetails.y;
 	if(this.iFormat.isMeasure(this.dataType[0])) {
 		if(this.columnIndex[0]==null) {
-			this.dataMin[0]=0.5;
-			this.dataMax[0]=1.5;
+			this.dataMin[0]=1;
+			this.dataMax[0]=Math.max(this.data.length,2);
 			// xTicks built whilst building data
 		} else if(this.dataMin[0]==this.dataMax[0]) {
 			this.dataMin[0]=this.dataMax[0]-1;
@@ -802,11 +802,15 @@ IChart.prototype.resizeChart=function() {
 			if(this.dataMaxYAxis<this.dataMax[i]) this.dataMaxYAxis=this.dataMax[i];
 			if(this.dataMinYAxis>this.dataMin[i]) this.dataMinYAxis=this.dataMin[i];
 		}
-		if(!this.dataMaxYAxis) this.dataMaxYAxis=1;
-		if(!this.dataMinYAxis) this.dataMinYAxis=0;
-		if(this.dataMinYAxis==this.dataMaxYAxis && this.dataMaxYAxis==0)  this.dataMaxYAxis=1;
-//		if(axisY.lowerBound==null) this.dataMinYAxis=this.dataMinYAxis*0.99;
-//		if(axisY.upperBound==null) this.dataMaxYAxis=this.dataMaxYAxis*1.01;
+		if(!this.dataMaxYAxis) {
+			this.dataMinYAxis=0;
+			this.dataMaxYAxis=1;
+		}
+		if(this.dataMinYAxis==this.dataMaxYAxis) {
+			if(this.dataMaxYAxis==0)  this.dataMaxYAxis=1;
+			this.dataMinYAxis*=0.99;
+			this.dataMaxYAxis*=1.01;
+		}
 	}
 
 	if(this.zAxis) {
@@ -864,7 +868,7 @@ IChart.prototype.resizeChart=function() {
 					if(y<this.dataMinYAxis) this.dataMinYAxis=y;
 				}
 			}
-			this.dataMinYAxis=this.dataMinYAxis*0.9;
+			this.dataMinYAxis*=0.9;
 		}  
 		this.yRatio=this.yMax/(Math.log(this.dataMaxYAxis) - Math.log(this.dataMinYAxis));
 		if(this.yRatio==0) this.yRatio=1;
