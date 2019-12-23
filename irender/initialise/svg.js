@@ -29,21 +29,32 @@ function Svg(base,properties,options) {
 	this.loadUseShapes(this.shapes);
 	if(options.legend) this.addLegend(options.legend);
 	this.addBase();
-	if(this.options.mouseCoords==null || this.options.mouseCoords) {
+	if(this.options.mouseCoords==null || this.options.mouseCoords)
 		this.mouse=new MouseSvg(this);
-	}
-	this.element.addEventListener('dblclick', this.editFloatingPane.bind(this), false)
-	this.svg.addEventListener('mousedown', this.setMoveSVGObject.bind(this), false);
-//	this.svg.addEventListener('resize',this.resize.bind(this), false);
+	if(this.editable)
+		this.element.addEventListener('dblclick', this.editFloatingPane.bind(this), false)
+	if(this.movable)
+		this.svg.addEventListener('mousedown', this.dragStart.bind(this), false);
+	if(this.resizable)
+		this.svg.addEventListener('resize',this.resize.bind(this), false);
 }
-//						this.parent.insertShape({x:ev.offsetX,y:ev.offsetY},Object.assign({},shapes[this.shape],this.getMapping()));
 Svg.prototype.addBase=function() {
-	this.base=this.drawObject({action:"g",id:"base",onclick:this.onclick});
-}
+	this.base=this.drawObject({action:"g",id:"base"});
+	const mousedown=this.options.mousedown||this.properties.mousedown;
+	this.setOn("mousedown");
+	this.setOn("mouseup");
+};
+Svg.prototype.setOn=function(onEvent) {
+	const event=this.options[onEvent]||this.properties[onEvent];
+	if(event) {
+		this.svg.addEventListener(onEvent,event.call.bind(event.object), false);
+	}
+};
 Svg.prototype.addLegend=function(properties) {
 	this.legend=Object.assign({position:{vertical:"top",horizontal:"right"}},properties===true?null:properties);
 	this.legendElement=this.drawObject({action:"g",id:"legend",style:{cursor:"hover"}});
-}
+	this.makeDraggable(this.legendElement);
+};
 Svg.prototype.addLegendRow=function(options,text,colour) {
 	const holdingG=this.legendElement.getBoundingClientRect();
 	const y=(holdingG.height);
@@ -180,6 +191,10 @@ Svg.prototype.drawObject=function(p,n) {
 				o.setAttributeNS(this.xlink, "xlink:"+x, p[a][x]);
 		} else if(a=="style") {
 			Object.assign(o.style,p[a]);
+		} else if(a=="title") {
+			let t=document.createElementNS(this.nsSVG,a);
+			t.appendChild(document.createTextNode(p[a]));
+			o.insertBefore(t,o.firstChild);
 		} else if(a instanceof Function) {
 			o.addEventListener((p.substr(0,2)=="on"?p.substr(2):p), a.bind(this), false);
 		} else try{
@@ -227,7 +242,7 @@ Svg.prototype.getPaneSize=function() {
 	return this.svg.getBoundingClientRect();
 };
 Svg.prototype.graph=function() {
-	this.drawObject(Object.assign({},...arguments),this.base)
+	return this.drawObject(Object.assign({},...arguments),this.base)
 };
 Svg.prototype.iconEnter=function(ev) {
 	Object.assign(ev.target.style,{cursor:"pointer",filter:"invert(100%)"})
@@ -612,7 +627,6 @@ const colors={
   "ivory": "#FFFFF0"
 }
 
-
 Svg.prototype.dragElement=null;
 Svg.prototype.dragOffset=null;
 Svg.prototype.dragTransform=null;
@@ -666,17 +680,12 @@ Svg.prototype.drag=function(evt) {
 };
 
 Svg.prototype.getMousePosition=function(evt) {
-	const CTM = svg.getScreenCTM();
+	const CTM = this.svg.getScreenCTM();
 	if (evt.touches) { evt = evt.touches[0]; }
 	return {
 	    x: (evt.clientX - CTM.e) / CTM.a,
 	    y: (evt.clientY - CTM.f) / CTM.d
 	  };
-};
-
-Svg.prototype.makeDraggable=function(e) {
-    e.addEventListener('mousedown', this.dragStart.bind(this));
-    e.addEventListener('touchstart', this.dragStart.bind(this));
 };
 Svg.prototype.dragEnd=function(evt) {
 	this.dragElement.removeEventListener('mousemove', this.dragEnd.bind(this), false);
@@ -689,6 +698,10 @@ Svg.prototype.dragEnd=function(evt) {
 	this.dragElement.removeEventListener('touchleave', this.dragEnd.bind(this), false);
 	this.dragElement.removeEventListener('touchcancel', this.dragEnd.bind(this), false);
 	this.dragElement=false;
+};
+Svg.prototype.makeDraggable=function(e) {
+    e.addEventListener('mousedown', this.dragStart.bind(this));
+    e.addEventListener('touchstart', this.dragStart.bind(this));
 };
 Svg.prototype.moveSvgElement=function(element,from,to) {
 	if(from.x==to.x && from.y==to.y) return;

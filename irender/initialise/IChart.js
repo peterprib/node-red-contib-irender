@@ -11,15 +11,16 @@ function IChart(base,properties,options) {
 	let args=[];
 	while(args.length<arguments.length) args.push(arguments[args.length]);
 	while(args.length<2) args.push(null);
-	this.detailXY=this.createElement("table",this.element);
-	this.detailXY.style="font-size:10px; top:0px; left:60px ; position:absolute ; display:none; background:transparent; border:transparent; z-index: 11; background-color: #FFFFFF; filter: alpha(opacity=80); opacity:0.6;";
 	args[2]=Object.assign({mouseCoords:false,legend:{},
-		onclick:this.canvasCoords.bind(this)
+		mousedown:{call:this.svgCoords,object:this},
+		mouseup:{call:this.svgCoordsReset,object:this}
 		},args[2]);
 	Svg.apply(this,args);
 	this.iFormat=new IFormat();
 	this.setColorPallet();
 	this.setOptions(Object.assign({},properties,options));
+	this.detailXY=this.createElement("table",this.element);
+	this.detailXY.style="font-size:10px; top:0px; left:60px ; position:absolute ; display:none; background:transparent; border:transparent; z-index: 11; background-color: #FFFFFF; filter: alpha(opacity=80); opacity:0.6;";
 	if(!this.loadDefer)
 		this.refresh();
 }
@@ -41,7 +42,7 @@ IChart.prototype.setOptions=function (options) {
 			width:100,
 			pie:{label:{font:{size:10}}},
 			axis:{
-				offset:30,
+				offset:20,
 				x:{
 					name:null,
 					line:{width:1,color:"black"},
@@ -202,13 +203,13 @@ IChart.prototype.calculateTicks=function(max,min,type,metric) {
 	}
 	return tickPosition;
 };
-IChart.prototype.canvasCoordsDetails=function(chart,xPos,yPos) {
-	const indexDetails=this.columnIndexDetails,
-		XYRow=this.addDetailXY();
+IChart.prototype.svgCoordsDetails=function(xPos,yPos) {
+	const indexDetails=this.columnIndexDetails;
+	let	XYRow=this.addDetailXY();
 	if(this.isEvents) {
 		const xBase=this.getRatioBase(xPos, this.xOffset,this.xRatio);
 		this.data.forEach((row)=>{
-			if(xBase.notInRange(row[0])) continue;
+			if(xBase.notInRange(row[0])) return;
 			let details="event:";
 			for(let i=indexDetails.y.start; i<indexDetails.y.end; i++)
 				details+=" "+this.dataToString(i,row[i]);
@@ -217,9 +218,9 @@ IChart.prototype.canvasCoordsDetails=function(chart,xPos,yPos) {
 			
 		});
 	} else if(this.isBubbleOrLine) {
-		const xBase=this.getRatioBase(xPos,this.xOffset,this.xRatio);
-		let yBase;
-		const y=this.yOffset - yPos;
+		let xBase=this.getRatioBase(xPos,this.xOffset,this.xRatio),
+			yBase,
+			y=this.yOffset - yPos;
 		if(this.isScaleNormal) {
 			yBase=this.getRatioBase(y,0,this.yRatio);
 		} else if(this.isScaleExponential) {
@@ -237,13 +238,13 @@ IChart.prototype.canvasCoordsDetails=function(chart,xPos,yPos) {
 		const yDetail=this.columnIndexDetails.y;
 		this.data.forEach((row)=>{
 			const headRow=row[0];
-			if(xBase.notInRange(headRow)) continue;
+			if(xBase.notInRange(headRow)) return;
 			for(let i=yDetail.start; i<yDetail.end; i++) {
 				const cell=row[i];
-				if(isNaN(cell)) continue;
+				if(isNaN(cell)) return;
 				y=(this.deltaIndex[this.columnIndex[i]]?this.dataToString(i,this.deltaData[row][i])
 						:this.dataToString(i,cell));
-				if(isNaN(y) || yBase.notInRange(y)) continue;
+				if(isNaN(y) || yBase.notInRange(y)) return;
 				XYRow=this.addDetailXY();
 				this.insertCell(XYRow,this.label[i],"x: "+this.dataToString(0,headRow),"y: "+y);
 				if(this.zAxis) {
@@ -262,19 +263,30 @@ IChart.prototype.canvasCoordsDetails=function(chart,xPos,yPos) {
 		this.insertCell(this.addDetailXY(),"y:",this.dataToString(1,(this.yOffset-yPos)/this.yRatio));
 	}
 };
-IChart.prototype.canvasCoords=function(callingEvent) {
-	var xPos=callingEvent.clientX - this.canvasOffset[0]-10;
-	var yPos=callingEvent.clientY - this.canvasOffset[1]-10;
-	while (this.detailXY.rows.length> 0) 
+IChart.prototype.svgCoords=function(evt) {
+	let mousePosition=this.getMousePosition(evt),
+		x=mousePosition.x,
+		y=mousePosition.y;
+//	var xPos=callingEvent.clientX - this.canvasOffset[0]-10;
+//	var yPos=callingEvent.clientY - this.canvasOffset[1]-10;
+	while (this.detailXY.rows.length) // clear old details
 		this.detailXY.deleteRow(0);
-	this.canvasCoordsDetails(this,xPos,yPos);
-	this.detailXY.setStyle({'top':  (yPos-  ( yPos<this.chart.height/2 ? 0 : this.detailXY.getHeight()) ) + 'px'
-		,'left': (xPos - ( xPos<this.chart.width/2  ? 0 : this.detailXY.getWidth() ) ) + 'px'
-		,'display': 'block'});
-	// x axis
-	this.graph({action:"line",x1:xPos+0.5,y1:this.chart.axis.y.position,x2:xPos+0.5,y2:"0",stroke:"black","stroke-width":1});
-	// y axis
-	this.graph({action:"line",x1:this.chart.axis.x.position,y1:yPos+0.5,x2:this.chart.width,y2:yPos+0.5,stroke:"black","stroke-width":1});
+	this.svgCoordsDetails(x,y);
+	this.detailXY.style.display='table';
+	const detailXY=this.detailXY.getBoundingClientRect();
+	this.detailXY.style.top=(evt.clientY-(y<this.chart.height/2?-5:detailXY.height+5))+'px';
+	this.detailXY.style.left=(evt.clientX-(x<this.chart.width/2?-5:detailXY.width+5))+'px';
+	let crosshairs=[];
+	if(x>this.chart.axis.x.position) 
+		crosshairs.push({action:"line",x1:x+0.5,y1:this.chart.axis.y.position,x2:x+0.5,y2:"0",stroke:"black","stroke-width":1});
+	if(y<this.chart.axis.y.position)
+		crosshairs.push({action:"line",x1:this.chart.axis.x.position,y1:y+0.5,x2:this.chart.width,y2:y+0.5,stroke:"black","stroke-width":1});
+	this.crosshairs=this.graph({action:"g",children:crosshairs});
+};
+IChart.prototype.svgCoordsReset=function() {
+	this.detailXY.style.display='none';
+	this.crosshairs.remove();
+	delete this.crosshairs;
 };
 IChart.prototype.chartSize=function() {
 	this.resizeChart();
@@ -417,12 +429,12 @@ IChart.prototype.drawChart=function() {
 IChart.prototype.drawChart_bar=function () {
 	const yDetails=this.columnIndexDetails.y;
 	this.barWidth=Math.floor(this.tickIncrement/yDetails.size);
-	for(let xPos=0,yPos=0,d,j,i=0; i<this.data.length; i++) {
+	for(let j,i=0; i<this.data.length; i++) {
 		for(j=yDetails.y.start; j<yDetails.y.end; j++) {
-			d=this.data[i][j];
+			const d=this.data[i][j];
 			if(d==null) continue;
-			xPos=this.chart.axis.x.position+Math.floor((i+0.5)*this.tickIncrement)+(j-1)*this.barWidth;
-			yPos=this.yPositionScale(d);
+			const xPos=this.chart.axis.x.position+Math.floor((i+0.5)*this.tickIncrement)+(j-1)*this.barWidth;
+			const yPos=this.yPositionScale(d);
 			this.graph({action:"rect",x:xPos,y:yPos,width:this.barWidth,
 				height:this.chart.axis.y.position-yPos,
 				stroke:(this.outline==="none"?this.colors[j]:this.outline),
@@ -501,7 +513,7 @@ IChart.prototype.drawChart_pushline=function() {
 		try {
 			this.plotSet(j, 1, (this.deltaIndex[this.columnIndex[j]]? this.deltaData : this.data) );
 		} catch(e) {
-			errors += 'error plotting '+ this.label[i] + '  ' +e +'\n';
+			errors += 'error plotting '+ this.label[j] + '  ' +e +'\n';
 		}
 	if(errors) throw Error(errors);
 };
@@ -567,7 +579,7 @@ IChart.prototype.getRatioBase=function(pos,offset,ratio) {
 	return {Plot:(pos - offset)/ratio,
 		MinRange:(pos - 5 - offset)/ratio,
 		MaxRange:(pos + 5 - offset)/ratio,
-		notInRange:v=>v<xBase.minRange||v>this.maxRange
+		notInRange:v=>v<this.minRange||v>this.maxRange
 	};
 };
 IChart.prototype.menuButton=function(title,property,o1,o2) {
@@ -582,20 +594,22 @@ IChart.prototype.onError=function(error) {
 IChart.prototype.plot=function(y, offset, data,transparency=1) { 
 	if(data.length==0) return;
 	const color=this.colors[y],
-		baseAttributes={action:"polyline",stroke:color,"stroke-width":this.lineWidth,fill:"none","fill-opacity":transparency};
-	if(data.length==1 || this.highlight=='first') {
+		baseAttributes={action:"polyline",stroke:color,"stroke-width":this.lineWidth,fill:"none","fill-opacity":transparency},
+		basePointAttributes={action:"circle",stroke:this.showPoints?color:"none","stroke-width":this.lineWidth,fill:this.showPoints?color:"none","fill-opacity":transparency};
+	if((data.length==1 || this.highlight=='first') && !this.showPoints) {
 		const dataX=this.data[0][0], dataY=data[0][y];
 		if((dataX||dataY)==null) return;
 		const plotX=this.xPositionScale(dataX),	plotY=this.yPositionScale(dataY);
 		this.graph(basePointAttributes,this.showPoints
-				?{action:"circle",cx:plotX,cy:plotY,r:3,fill:color}
-				:{action:"rect",x:plotX-3,y:plotX-3,width:6,height:6,fill:color});
+				?{action:"circle",cx:plotX,cy:plotY,r:3,fill:color,title:"x: "+dataX+" y: "+dataY}
+				:{action:"rect",x:plotX-3,y:plotX-3,width:6,height:6,fill:color,title:"x: "+dataX+" y: "+dataY});
 		if(data.length==1) return;
 	}
 	let errors,points=[];
 	data.forEach((row,x)=>{
+		const dataX=row[0],
+			dataY=row[y];
 		try{
-			const dataX=row[0],dataY=row[y];
 			if(dataX==null || dataY==null || isNaN(dataX) || isNaN(dataY)) {
 				if(points.length>0) {
 					this.graph(baseAttributes,{points:points.join(" ")});
@@ -609,7 +623,9 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 				}
 				return;
 			}
-			points.push(this.xPositionScale(dataX)+","+this.yPositionScale(dataY));
+			const x=this.xPositionScale(dataX), y=this.yPositionScale(dataY);
+			this.graph(basePointAttributes,{cx:x,cy:y,r:3,title:"x: "+dataX+" y: "+dataY});
+			points.push(x+","+y);
 		} catch (e) {
 			errors += " x: " + dataX + " ( " + plotX + " ) " + " y: " + dataY + " ( " + plotY + " ) " + "\n" + e + "\n";
 			this.graph(baseAttributes,{points:points.join(" ")});
@@ -619,14 +635,16 @@ IChart.prototype.plot=function(y, offset, data,transparency=1) {
 	if(points.length>0) {
 		this.graph(baseAttributes,{points:points.join(" ")});
 		if(( points.length==1 || this.highlight=='last' ) && !this.showPoints) 
-			this.graph(baseAttributes,{action:"rect",fill:color,x:plotX-3,y:plotX-3,width:6,height:6});
-	}  
+			this.graph(baseAttributes,{action:"rect",fill:color,x:plotX-3,y:plotX-3,width:6,height:6,title:"x: "+dataX+" y: "+dataY});
+	}
+/*
 	if(this.showPoints)
 		data.forEach(row=>{
 			dataY=this.yPositionScale(row[y]);
 			if(dataY)
 				this.graph(baseAttributes,{action:"circle",fill:color,cx:this.xPositionScale(row[0]),cy:dataY,r:3});
 		});
+*/
 	if(errors) throw Error(errors);
 };
 IChart.prototype.plotSet=function(y, offset, data) {
