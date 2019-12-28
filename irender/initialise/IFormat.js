@@ -1,12 +1,37 @@
 /*
  * [{column:0,format:afunction,title:"a col"},...]
  */
+if(!String.prototype.CRLF2BR)
+    String.prototype.CRLF2BR = function () {
+		return  this.replace("\n\r","<br/>").replace("\n","<br/>");
+	};
 if(!String.prototype.to)
     String.prototype.to = function (type) {
 		return this==null?null:type==null?value:this['to'+type.capitalize()];
 	};
+if(!String.prototype.toDatetime)
+    String.prototype.toDatetime = String.prototype.toTime;
+if(!String.prototype.toDate)
+    String.prototype.toDate = String.prototype.toTime;
+if(!String.prototype.toInt)
+    String.prototype.toInt = function () {
+		return parseInt(this);
+	};
+if(!String.prototype.toReal)
+    String.prototype.toReal = function () {
+		return parseFloat(this);
+	};
+if(!String.prototype.toTime)
+    String.prototype.toTime = function () {
+		return  Date.parse(this);
+	};
+if(!String.prototype.toTimestamp)
+    String.prototype.toTimestamp = function () {
+		return Date.parse(this.substr(0,4)+'/'+this.substr(5,2)+'/'+this.substr(8,11))
+			+ parseInt(this.substr(21,3));
+	};
 if(!String.prototype.toTitle)
-    String.prototype.toTitle = function () {
+	String.prototype.toTitle = function () {
 		var title=this.substr(0,1).toUpperCase()
 			,lastLowerCase=false;
 		for(var i=1; i<this.length; i++) {
@@ -20,31 +45,6 @@ if(!String.prototype.toTitle)
 		}
 		return title;
   	};
-if(!String.prototype.toReal)
-    String.prototype.toReal = function () {
-		return parseFloat(this);
-	};
-if(!String.prototype.toInt)
-    String.prototype.toInt = function () {
-		return parseInt(this);
-	};
-if(!String.prototype.toTimestamp)
-    String.prototype.toTimestamp = function () {
-		return Date.parse(this.substr(0,4)+'/'+this.substr(5,2)+'/'+this.substr(8,11))
-			+ parseInt(this.substr(21,3));
-	};
-if(!String.prototype.toTime)
-    String.prototype.toTime = function () {
-		return  Date.parse(this);
-	};
-if(!String.prototype.toDatetime)
-    String.prototype.toDatetime = String.prototype.toTime;
-if(!String.prototype.toDate)
-    String.prototype.toDate = String.prototype.toTime;
-if(!String.prototype.CRLF2BR)
-    String.prototype.CRLF2BR = function () {
-		return  this.replace("\n\r","<br/>").replace("\n","<br/>");
-	};
 
 function IFormat(options) {
 	Object.assign(this,{format:"auto"},options);
@@ -58,7 +58,7 @@ IFormat.prototype.auto = function (v) {
 	this.formatter=IFormat.prototype.toString;
 	return this.formatter.apply(this,arguments);
 };
-IFormat.prototype.toString = (v)=>(v||"").toString();
+IFormat.prototype.toString = (v)=>v==null?"":v.toString();
 IFormat.prototype.copy = (v)=>v;
 IFormat.prototype.dateTypes = ["date","time","datetime","timestamp"];
 IFormat.prototype.dateTimeTypes = IFormat.prototype.dateTypes;
@@ -132,9 +132,9 @@ IFormat.prototype.number = (v)=>Number(v);
 	}
 };
 */
-IFormat.prototype.toAbbreviatedNumber = (v)=>formatNumberToAbbreviated(v);
-IFormat.prototype.appendAbbreviatedNumber = (v)=>v+" ("+IFormat.toAbbreviatedNumber(v)+")";
-IFormat.prototype.prependAbbreviatednumber = (v)=>IFormat.toAbbreviatedNumber(v) + " ("+v+")";
+IFormat.prototype.toAbbreviatedNumber = (v)=>IFormat.prototype.formatNumberToAbbreviated(v);
+IFormat.prototype.appendAbbreviatedNumber = (v)=>v+" ("+IFormat.prototype.toAbbreviatedNumber(v)+")";
+IFormat.prototype.prependAbbreviatednumber = (v)=>IFormat.prototype.toAbbreviatedNumber(v) + " ("+v+")";
 IFormat.prototype.wrap = (v)=>this.pre + v + this.post;
 IFormat.prototype.toYesNo = (v)=>v=="y"||v=="1"||v==1?'Yes':"No";
 IFormat.prototype.toBoolean = (v)=>v=="t"||v=="1"||v==1?"True":'False';
@@ -144,16 +144,24 @@ IFormat.prototype.percentage = IFormat.prototype.percent;
 
 IFormat.prototype.format = (value,datatype,precision)=>{
 	try{
-		return IForm["format"+datatype](value,precision);
+		return IFormat.prototype["format"+datatype](value,precision);
 	} catch(e) {
 		return value;
 	}
 };
+IFormat.prototype.getFormatAbbreviatedFunction = datatype=>{
+	try{
+		return IFormat.prototype["format"+datatype+"Abbrev"]||IFormat.prototype.toString;
+	} catch(e) {
+		return IFormat.prototype.toString;
+	}
+
+};
 IFormat.prototype.formatAbbreviate = (value,datatype,precision)=>{
 	try{
-		return IForm["format"+datatype+"Abbrev"](value,precision);
+		return IFormat.prototype["format"+datatype+"Abbrev"](value,precision);
 	} catch(e) {
-		return value.toString();
+		return value==null?"":value.toString();
 	}
 };
 IFormat.prototype.formatTime = function (tsIn,precision) {
