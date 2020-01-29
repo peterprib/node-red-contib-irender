@@ -18,6 +18,7 @@ MouseSvg.prototype.move=function(ev) {
 	this.element.childNodes[3].firstChild.nodeValue=ev.offsetY;
 };
 function Svg(base,properties,options) {
+	this.legend=Object.assign({display:true,position:{vertical:"top",horizontal:"right"}});
 	this.base=base;
 	this.options=(options||{});
 	this.element=document.createElement("div");
@@ -51,7 +52,7 @@ Svg.prototype.setOn=function(onEvents) {
 	});
 };
 Svg.prototype.addLegend=function(properties) {
-	this.legend=Object.assign({position:{vertical:"top",horizontal:"right"}},properties===true?null:properties);
+	Object.assign(this.legend,properties===true?null:properties);
 	this.legendElement=this.drawObject({action:"g",id:"legend",style:{cursor:"hover"}});
 	this.makeDraggable(this.legendElement);
 };
@@ -66,7 +67,7 @@ Svg.prototype.addLegendRow=function(options,text,colour) {
 			this.legendElement
 		);
 	} else {
-		this.drawObject(Object.assign({action:"text",x:0,y:11,"font-size":11,children:[text]},options),this.legendElement);
+		this.drawObject(Object.assign({action:"text",x:0,y:y+11,"font-size":11,children:[text]},options),this.legendElement);
 	}
 	this.legendFitPane();
 	return this;
@@ -244,6 +245,9 @@ Svg.prototype.getPaneSize=function() {
 Svg.prototype.graph=function() {
 	return this.drawObject(Object.assign({},...arguments),this.base)
 };
+Svg.prototype.hideLegend=function() {
+	this.legendElement.setStyle({'display': (this.legend.displa?"none":"block")});
+};
 Svg.prototype.iconEnter=function(ev) {
 	Object.assign(ev.target.style,{cursor:"pointer",filter:"invert(100%)"})
 //	ev.target.style.cursor="pointer";
@@ -321,6 +325,10 @@ Svg.prototype.onclickClose=function(ev) {
 };
 Svg.prototype.pattern=function(p) {
 	return this.drawObject(Object.assign({action:"pattern"},p));
+};
+Svg.prototype.polarToCartesian=function(centreX, centreY, radius, angleInDegrees) {
+	const angleInRadians=(angleInDegrees-90)*Math.PI/180.0;
+	return centreX+(radius*Math.cos(angleInRadians))+" "+centreY+(radius*Math.sin(angleInRadians));
 };
 Svg.prototype.positionFixed=function(e,x,y) {
 	Object.assign(e.style,{left:x+"px",top:y+"px"});

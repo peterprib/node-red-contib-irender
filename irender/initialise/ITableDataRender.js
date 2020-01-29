@@ -31,7 +31,6 @@ function ITableDataRender(element,properties,md,mp,data) {
 		(typeof properties =="string")?{url:properties}:properties
 	);
 	this.element=typeof element =="string"?document.getElementById(element):element;
-	this.iFormat=new IFormat();
 	if(md) {this.setMetaData(md);}
 	if(mp) {this.setMapping(mp);}
 	this.data=data||[];
@@ -64,13 +63,13 @@ ITableDataRender.prototype.addRowId = function (n) {
 	this.structure.push(c);
 	this.setColumn(c,this.structure.length-1);
 };
-ITableDataRender.prototype.buildColumnar = function (n) {
-	this.data.forEach((row)=>{
-	});
-};
 ITableDataRender.prototype.appendTo = function (n) {
 	document.getElementById(n).appendChild(this.getHTMLTable());
 	return this;
+};
+ITableDataRender.prototype.buildColumnar = function (n) {
+	this.data.forEach((row)=>{
+	});
 };
 ITableDataRender.prototype.clearPane = function () {
 	while (this.element.firstChild) {
@@ -100,7 +99,7 @@ ITableDataRender.prototype.displayPane = function () {
 	if(this.element.IRender) {
 		this.element.IRender.display();
 	} else {
-		console.error("ITableDataRender dispayPane IRender not found on element");
+		console.error("ITableDataRender displayPane IRender not found on element");
 	}
 };
 ITableDataRender.prototype.displayRow = function (ev,r) {
@@ -120,9 +119,7 @@ ITableDataRender.prototype.displayRow = function (ev,r) {
 					t={type:"number",  size:9, maxsize:8};
 					break;
 				case 'varchar':
-					if(d) {
-						let rows=d.search(/\n/g); // count newlines
-					}
+					let rows=(d||"").search(/\n/g); // count newlines
 					if(rows>0) {
 						t={action:"textarea", cols:100, rows:Math.min(rows+1,10), maxsize:md.typelen };
 					} else {
@@ -167,6 +164,49 @@ ITableDataRender.prototype.getData = function (url) {
     this.getUrl=this.url;
     this.refresh();
 };
+ITableDataRender.prototype.getHTMLTable = function () {
+	const t=this.css.createElement(null,"TABLE","Table");
+	this.tbody=this.css.createElement(t,"TBODY","TableBody");
+	const tHeadRow=this.css.createElement(this.tbody,"TR");
+	t.addEventListener('contextmenu', this.contextmenu.bind(this), false);
+	this.css.createElement(tHeadRow,"TD","Cell0");
+	let dl=this.data.length;
+	for(let i=0; i<dl ;i++) {  // define all row label cells
+		this.css.createElement(this.css.createElement(this.tbody,"TR"),"TD","Left");
+	}
+	this.clearPane();
+    this.element.appendChild(t);
+	
+	this.mapping.forEach(mp=>{
+//	for(let ml=this.mapping.length,m=0; m<ml; m++) { //columns
+//		const mp=this.mapping[m];
+//		const md=this.metaData[mp.offset];
+		mp.appendCellTitle(tHeadRow,this.css);
+		for(let i=0; i<dl ;i++) {
+			mp.appendCellData(this.tbody.rows[i+1],this.css,this.data[i]);
+//			this.css.createElement(this.tbody.rows[i+1],"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
+		}
+	});
+	return t;
+};
+ITableDataRender.prototype.hideRow = function (ev,r) {
+	this.tbody.childNodes[r].style.display="none";
+};
+ITableDataRender.prototype.processData = function (data) {
+    Object.assign(this,JSON.parse(data));
+    if(!this.metaData) {
+        this.setMetaData(this.structure);
+        this.setMapping(this.structure);
+    }
+    this.getHTMLTable();
+    if(this.onLoad) {
+    	try{
+        	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
+    	} catch(e) {
+    		this.error(e);
+    	}
+    }
+};
 ITableDataRender.prototype.refresh = function () {
     let base=this, httpRequest= new XMLHttpRequest();
     httpRequest.timeout = 10000; // time in milliseconds
@@ -198,48 +238,6 @@ ITableDataRender.prototype.refresh = function () {
     	base.error(e.message);
     }
 }
-ITableDataRender.prototype.getHTMLTable = function () {
-	const t=this.css.createElement(null,"TABLE","Table");
-	this.tbody=this.css.createElement(t,"TBODY","TableBody");
-	const tHeadRow=this.css.createElement(this.tbody,"TR");
-	t.addEventListener('contextmenu', this.contextmenu.bind(this), false);
-	this.css.createElement(tHeadRow,"TD","Cell0");
-	let dl=this.data.length;
-	for(let i=0; i<dl ;i++) {  // define all row label cells
-		this.css.createElement(this.css.createElement(this.tbody,"TR"),"TD","Left");
-	}
-	this.clearPane();
-    this.element.appendChild(t);
-	
-	for(let ml=this.mapping.length,m=0; m<ml; m++) { //columns
-		const mp=this.mapping[m];
-//		const md=this.metaData[mp.offset];
-		mp.appendCellTitle(tHeadRow,this.css);
-		for(let i=0; i<dl ;i++) {
-			mp.appendCellData(this.tbody.rows[i+1],this.css,this.data[i]);
-//			this.css.createElement(this.tbody.rows[i+1],"TD","Cell").appendChild(mp.format.toHTML(this.data[i][mp.offset]));
-		}
-	}
-	return t;
-};
-ITableDataRender.prototype.hideRow = function (ev,r) {
-	this.tbody.childNodes[r].style.display="none";
-};
-ITableDataRender.prototype.processData = function (data) {
-    Object.assign(this,JSON.parse(data));
-    if(!this.metaData) {
-        this.setMetaData(this.structure);
-        this.setMapping(this.structure);
-    }
-    this.getHTMLTable();
-    if(this.onLoad) {
-    	try{
-        	this.onLoad.callFunction.apply(this.onLoad.object,[this]);
-    	} catch(e) {
-    		this.error(e);
-    	}
-    }
-};
 ITableDataRender.prototype.setLoading = function () {
 	if(this.element.IRender) {
 		if(this.element.IRender.setLoading) {

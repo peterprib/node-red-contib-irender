@@ -51,6 +51,27 @@ function IFormat(options) {
 	this.formatter=this[this.format];
 	return this;
 }
+IFormat.prototype.dataConversionFunc={
+	"real": function(value) {return parseFloat(value);},
+	"int": function(value) {return parseFloat(value);},
+	"number": function(value) {return parseFloat(value);},
+	"timestamp": function(value) {
+		return Date.parse(value.substr(0,4)+'/'+value.substr(5,2)+'/'+value.substr(8,11))
+		+ parseInt(value.substr(21,3));
+	},
+	"time": function(value) {return Date.parse(value);},
+	"datetime": function(value) {return Date.parse(value);},
+	"date": function(value) {return Date.parse(value);}
+};
+IFormat.prototype.dataConversion=(type,value)=>{
+	if(value==null) return null;
+	if(IFormat.prototype.dataConversionFunc[type]==null) return value;
+	try{
+		return IFormat.prototype.dataConversionFunc[type](value);
+	} catch(e) {
+		throw Error("data conversion error data type: " +type + ' value: "'+ value +'"');
+	}
+};
 IFormat.prototype.toHTML = function() {
 	return document.createTextNode(this.formatter.apply(this,arguments));
 };
@@ -135,7 +156,6 @@ IFormat.prototype.number = (v)=>Number(v);
 IFormat.prototype.toAbbreviatedNumber = (v)=>IFormat.prototype.formatNumberToAbbreviated(v);
 IFormat.prototype.appendAbbreviatedNumber = (v)=>v+" ("+IFormat.prototype.toAbbreviatedNumber(v)+")";
 IFormat.prototype.prependAbbreviatednumber = (v)=>IFormat.prototype.toAbbreviatedNumber(v) + " ("+v+")";
-IFormat.prototype.wrap = (v)=>this.pre + v + this.post;
 IFormat.prototype.toYesNo = (v)=>v=="y"||v=="1"||v==1?'Yes':"No";
 IFormat.prototype.toBoolean = (v)=>v=="t"||v=="1"||v==1?"True":'False';
 IFormat.prototype.normalize = function(v) {return (this.normalizer==0 ? null : v/this.normalizer)};
@@ -148,14 +168,6 @@ IFormat.prototype.format = (value,datatype,precision)=>{
 	} catch(e) {
 		return value;
 	}
-};
-IFormat.prototype.getFormatAbbreviatedFunction = datatype=>{
-	try{
-		return IFormat.prototype["format"+datatype+"Abbrev"]||IFormat.prototype.toString;
-	} catch(e) {
-		return IFormat.prototype.toString;
-	}
-
 };
 IFormat.prototype.formatAbbreviate = (value,datatype,precision)=>{
 	try{
@@ -233,25 +245,22 @@ IFormat.prototype.formatint = IFormat.prototype.formatInt;
 IFormat.prototype.formatnumberAbbrev = IFormat.prototype.formatNumberToAbbreviated;
 IFormat.prototype.formatrealAbbrev = IFormat.prototype.formatReal;
 IFormat.prototype.formatintAbbrev = IFormat.prototype.formatInt;
-
-IFormat.prototype.dataConversionFunc={
-	"real": function(value) {return parseFloat(value);}
-	,"int": function(value) {return parseFloat(value);}
-	,"number": function(value) {return parseFloat(value);}
-	,"timestamp": function(value) {
-		return Date.parse(value.substr(0,4)+'/'+value.substr(5,2)+'/'+value.substr(8,11))
-		+ parseInt(value.substr(21,3));
-	}
-	,"time": function(value) {return Date.parse(value);}
-	,"datetime": function(value) {return Date.parse(value);}
-	,"date": function(value) {return Date.parse(value);}
-};
-IFormat.prototype.dataConversion=(type,value)=>{
-	if(value==null) return null;
-	if(IFormat.prototype.dataConversionFunc[type]==null) return value;
+IFormat.prototype.getFormatFunction = datatype=>{
 	try{
-		return IFormat.prototype.dataConversionFunc[type](value);
+		return IFormat.prototype["format"+datatype]||IFormat.prototype.toString;
 	} catch(e) {
-		throw Error("data conversion error data type: " +type + ' value: "'+ value +'"');
+		return IFormat.prototype.toString;
 	}
+
 };
+IFormat.prototype.getFormatAbbreviatedFunction = datatype=>{
+	try{
+		return IFormat.prototype["format"+datatype+"Abbrev"]||IFormat.prototype.toString;
+	} catch(e) {
+		return IFormat.prototype.toString;
+	}
+
+};
+IFormat.prototype.wrap = (v)=>this.pre + v + this.post;
+
+const iFormat= new IFormat();

@@ -149,3 +149,40 @@ const colors={
   "lightyellow": "#FFFFE0",
   "ivory": "#FFFFF0"
 }
+//	const colorCnt=this.columnIndexDetails.y.size+1;
+//	if(colorCnt>this.colors.length) {
+//		const delta=this.colorPallet.length/colorCnt;
+//		for(let i=this.colors.length; i<colorCnt; i++) 
+//			this.colors[i]=this.colorPallet[Math.floor(i*delta)];
+//	}
+
+colorsBase=[ 
+	'#FF0000', // Red 		
+	'#00FFFF', // Turquoise 		
+	'#408080', // Grass Green
+	'#0000A0', // Dark Blue 		
+	'#FF8040', // Orange 	
+	'#FFFF00', // Yellow 	 	
+	'#800000', // Burgundy 	
+	'#800080', // Dark Purple 	
+	'#804000', // Brown 	
+	'#00FF00', // Pastel Green 		
+	'#FF00FF', // Pink 	 	
+	'#C0C0C0', // Light Grey 	
+	'#808000', // Forest Green 	
+	'#0000FF', // Light Blue 	 	
+	'#FF0080', // Light Purple 	 	
+	'#808080' // Dark Grey
+];
+
+
+getColorPallet=function(number) {
+	let colorPallet=[];
+	const max=Math.floor(number/3)+1.
+		delta=255/max;
+	for(let i=0;i<max;i++)
+		for(let j=0;j<max;j++)
+			for(let k=0;k<max;k++)
+				colorPallet.push('rgb(' + Math.floor(i*delta) + ',' + Math.floor(j*delta) + ','+ Math.floor(k*delta) +')');
+	return colorPallet;
+};

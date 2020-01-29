@@ -1,11 +1,14 @@
 function PaneFloat(base,paneProperties,options,target,action) {
+//	this.element=css.setClass(createDiv(),"PaneFloat");
+//	base.floatHandle.appendChild(this.element);
 	this.pane=new Pane(base,
 		Object.assign({},paneProperties,{closable:true,tab:false}),  //paneProperties
 		base.floatHandle,  //parentElememt
+//		this.element,  //parentElememt
 		target,
 		action
 	);
-	css.setClass(this.pane.element,"PaneFloat");
+//	this.element.appendChild(this.pane.element);
 	this.position(options.x,options.y);
 	if(options) {
 		if("message" in options) {

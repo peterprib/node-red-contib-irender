@@ -31,10 +31,11 @@ IRenderClass.prototype.CreateStyleSheet = function (n) {
 	.add("Menu","vertical-align: top;")
 	.add("MenuText:hover","background: LightGrey;")
 	.add("MenuOption","height: 20px; vertical-align: top;")
-	.add("PaneFloat","min-width: 100px; min-height: 100px; "
+	.add("PaneFloat","min-width: 200px; min-height: 200px; resize: both;  padding: 20px; "
 			+"position:absolute; filter: alpha(opacity=100); -moz-opacity: 1; background-color:white; opacity: 1; padding:0px;"
 			+"overflow: auto; z-index:99999; background-color:#FFFFFF; border: 1px solid #a4a4a4;")
 	.add("resizeVertical:hover","cursor: ew-resize;")
+	.add("resizeHorozontal:hover","cursor: ns-resize;")
    	.add("Tab","height: 20px; float: left; border: medium solid LightGrey; border-top-left-radius: 5px; border-top-right-radius: 10px;")
    	.add("TabDetail","height: 100%; width: 100%; vertical-align:top ;")
 	.add("TabPaneCell","border-top-style: solid; border-top-color: LightGrey;")

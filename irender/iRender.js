@@ -1,21 +1,8 @@
-const nodeLabel="iRender";
-const ts=(new Date().toString()).split(' ');
-console.log([parseInt(ts[2],10),ts[1],ts[4]].join(' ')+" - [info] "+nodeLabel+" Copyright 2019 Jaroslav Peter Prib");
+const Logger = require("logger");
+const logger = new Logger("iRender");
+logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 
-const debugOff=(()=>false);
-function debugOn(m) {
-	const ts=(new Date().toString()).split(' ');
-	if(!debugCnt--) {
-		console.log([parseInt(ts[2],10),ts[1],ts[4]].join(' ')+" - [debug] "+nodeLabel+" debugging turn off");
-		debug=debugOff;
-	}
-	if(debugCnt<0) {
-		debugCnt=100;
-		console.log([parseInt(ts[2],10),ts[1],ts[4]].join(' ')+" - [debug] "+nodeLabel+" debugging next "+debugCnt+" debug points");
-	}
-	console.log([parseInt(ts[2],10),ts[1],ts[4]].join(' ')+" - [debug] "+nodeLabel+" "+(m instanceof Object?JSON.stringify(m):m));
-}
-let debug=debugOn,debugCnt=100;
+const nodeLabel="iRender";
 
 const fs=require('fs'),
 	path=require('path'),
@@ -24,11 +11,11 @@ const fs=require('fs'),
 	cookieParser = require("cookie-parser"),
 	express=require("express");
 let isSetup,urls={};
-debug({label:"initialise: ",files:initialPath});
+if(logger.active) logger.send({label:"initialise: ",files:initialPath});
 function getInitial() {
 	let data="";
 	fs.readdirSync(path.join(__dirname,"initialise")).forEach(filename => {
-		debug({label:"loading: ",filename:filename});
+//		if(logger.active) logger.send({label:"loading: ",filename:filename});
 		data+=fs.readFileSync(path.join(initialPath,filename));
 	});
 	return data;
@@ -75,7 +62,6 @@ module.exports = function (RED) {
         }
         const mainWindow = mustache.render(windowTemplate.toString(), node);
         setUpURL(RED,node,mainWindow,"text/HTML","index");
-        
     }
     RED.nodes.registerType(nodeLabel,redNode);
 };
