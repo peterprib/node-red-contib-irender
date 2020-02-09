@@ -1,6 +1,7 @@
 function IChartStack(chart){
 	this.chart=chart;
 }
+IChartStack.prototype.isCartezian=true;
 IChartStack.prototype.draw=function() {
 	const axis=this.chart.chart.axis
 		rect={action:"rect",width:this.chart.barWidth,stroke:this.chart.outline,"stroke-width":this.chart.lineWidth};
@@ -19,4 +20,7 @@ IChartStack.prototype.draw=function() {
 };
 IChartStack.prototype.getCoordsPoints=function(xPOs,yPos) {
 	return ["x: ??","y: ??"];
+};
+IChartStack.prototype.getMenuOptions=function() {
+	return [this.chart.menuButton("Chart Type","chart.type","bar","stack")];
 };

@@ -1,4 +1,4 @@
-const Logger = require("logger");
+const Logger = require("node-red-contrib-logger");
 const logger = new Logger("iRender");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 

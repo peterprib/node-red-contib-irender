@@ -1,6 +1,7 @@
 function IChartLine(chart) {
 	this.chart=chart;
 }
+IChartLine.prototype.isCartezian=true;
 IChartLine.prototype.draw=function(plot=this.plot) {
 	const transparency=0.8,
 		axis=this.chart.axis,
@@ -67,7 +68,6 @@ IChartLine.prototype.checkOptions=function() {
 	if(!this.chart.axis.x || !this.chart.axis.x.column) throw Error("axis x not defined");
 	this.chart.checkExists(this.chart.axis.x.column.name,'Chart type: '+this.chart.type+' is missing parameter chart.axis.x.column.name');
 };
-
 IChartLine.prototype.getCoordsPoints=function(xPos,yPos) {
 	const axis=this.chart.axis;
 	let y=this.yOffset - yPos;
@@ -80,10 +80,10 @@ IChartLine.prototype.getCoordsPoints=function(xPos,yPos) {
 	const xPoints=columnX.getPointsNear(axis.x.getPositionValue(xPos));
 	axis.y.columns.forEach((column)=>{
 		column.getPointsNear(axis.x.getPositionValue(yPos),xPoints).forEach(i=>{
-			this.chart.insertCell(this.chart.addDetailXY(),c.title,"x: "+columnX.getFormatted(i),"y: "+c.getFormatted(i));
-			if(axis.z.column) {
-				this.insertCell(this.chart.addDetailXY(),"z: "+axis.z.column.getFormattedValue(i));
-			}
+			this.chart.insertCell(this.chart.addDetailXY(),column.title,"x: "+columnX.getFormatted(i),"y: "+column.getFormatted(i));
 		});
 	});
+};
+IChartLine.prototype.getMenuOptions=function() {
+	return [this.chart.menuButton("Y Scaling","chart.axis.y.scale.type","AUTO","EXPONENTIAL")];
 };

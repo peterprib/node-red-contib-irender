@@ -155,8 +155,14 @@ ITableDataRender.prototype.error = function (err) {
 		this.onLoad.onError.apply(this.onLoad.object,[err.toString()]);
     }
 };
-ITableDataRender.prototype.getColumn = function (offset) {
-	return this.structure[offset].columnObject
+ITableDataRender.prototype.filterColumn = function (f) {
+	return this.structure.filter(c=>f.apply(this,[c.columnObject]));
+};
+ITableDataRender.prototype.forEachColumn = function (f) {
+	this.structure.forEach(c=>f.apply(this,[c.columnObject]));
+};
+ITableDataRender.prototype.getColumn = function (name) {
+	return this.columns[name];    //this.structure[offset].columnObject
 };
 ITableDataRender.prototype.getData = function (url) {
 	if(url) this.url=url;
@@ -238,6 +244,13 @@ ITableDataRender.prototype.refresh = function () {
     	base.error(e.message);
     }
 }
+ITableDataRender.prototype.setColors = function () {
+	let availableColors=getColorPallet(this.structure.length);
+	this.structure.forEach(c=>{
+		const color=this.columns[c.name].color||availableColors.pop();
+		this.columns[c.name].color=color in colors?colors[color]:color;
+	});
+}
 ITableDataRender.prototype.setLoading = function () {
 	if(this.element.IRender) {
 		if(this.element.IRender.setLoading) {
@@ -268,6 +281,17 @@ ITableDataRender.prototype.setMapping = function (m) {
 //		.map(c=>{//			format:(new IFormat(c))
 //		column.offset=(typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1);
 		return column;
+	});
+};
+ITableDataRender.prototype.sortedData = function (order) {
+	//[{offset:0,direction:1},
+	return this.data.sort((a,b)=>{
+		for(let c in order) {
+			const i=c.offset;
+			if(a[i]>b[i]) return c.direction||1;
+			if(a[i]<b[i]) return -c.direction||1;
+		}
+		return 0
 	});
 };
 ITableDataRender.prototype.transform = function (d) {

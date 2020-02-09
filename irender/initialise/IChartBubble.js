@@ -1,56 +1,46 @@
-function IChartBubble(){
-	const zDetails=this.chart.axis.z.column;
-	this.zDataMax=zDetails.getMax();
-	this.zDataMin=zDetails.getMin();
-	this.zRatioColumns=[];
-	for(i=0;i<zDetails.dataMin.length;i++) {
-		this.zRatioColumns[i]={};
-		var ratio=this.zRatioColumns[i];
-		rangeZ=zDetails.dataMax[i]-zDetails.dataMin[i];
-		if(rangeZ==0) {
-			rangeZ=zDetails.dataMin[i];
-			ratio.zRatioOffset=0;
-		} else 
-			ratio.zRatioOffset=zDetails.dataMin[i];
-		ratio.zRatio=this.bubbleRatio*(Math.min(this.yMax,this.xMax)/rangeZ );
-		if(ratio.zRatio==Infinity) this.zRatio=this.bubbleRatio;
-	}
-	rangeZ=this.zDataMax-this.zDataMin;
+function IChartBubble(chart){
+	this.chart=chart;
+//	this.chart.checkExists(axis.z.name,'Missing parameter axis.z.name');
+/*	
+	const columnZ=this.chart.axis.z.column;
+	const rangeZ=columnZ.getRange();
 	if(rangeZ==0) {
-		rangeZ=this.zDataMin;
+		rangeZ=zDetails.getMin();
 		this.zRatioOffset==0;
 	} else 
 		this.zRatioOffset=this.zDataMin;
 	this.zRatio=this.bubbleRatio*(Math.min(this.yMax,this.xMax)/rangeZ);
 	if(this.zRatio==Infinity) this.zRatio=this.bubbleRatio;
-	if(isNaN(this.zRatio)) throw "z ratio calculation error, charting width:"+ this.yMax + " max:"+ Math.max.apply(Math,this.columnIndexDetails.z.dataMax) + " min:"+ Math.min.apply(Math,this.columnIndexDetails.z.dataMin);
-
+	if(isNaN(this.zRatio)) throw "z ratio calculation error, charting width:"+ zDetails.getMin() + " max:"+ Math.max.apply(Math,this.columnIndexDetails.z.dataMax) + " min:"+ zDetails.getMax());
+*/
 }
-IChartBubble.prototype.drawChart_bubble=function() {
-	this.drawAxisX();
-	this.drawAxisY();
-
-	const zDetails=this.columnIndexDetails.z,
-		yStart=this.columnIndexDetails.y.start,
-		yEnd=this.columnIndexDetails.y.end,
-		colX=this.columnIndex[0];
-	for(let i=0; i<this.data.length; i++) {
-		for(let j=yStart; j<yEnd; j++) {
-			const data=(this.deltaIndex[this.columnIndex[j]]? this.deltaData : this.data)
-			const zData=( zDetails.deltaIndex[zDetails.columnIndex[j]] ? zDetails.deltaData : zDetails.dataStore );
-			if(this.data[i][j]==null) continue;
-			const y=data[i][j];
-			if(isNaN(y)) continue;
-			const xPos=this.xPositionScale(this.data[i][colX]);
-			const yPos=this.yPositionScale(y);
-			const radius=Math.abs(this.scaleZ(zData[i][j],j)/2);
-			if(radius==0) continue;;
-			this.graph({action:"circle",cx:xPos,cy:xPos,r:radius,stroke:(this.outline==="none"?this.colors[j]:this.outline),"stroke-width":1,fill:color,"fill-opacity":0.5});
-		}
-	}
+IChartBubble.prototype.isCartezian=true;
+IChartBubble.prototype.draw=function() {
+	const transparency=0.8,
+		zChartRange=Math.min(this.chart.width,this.chart.height)/4;
+		axis=this.chart.axis,
+		zColumns=axis.z.columns,
+		offsetX=axis.x.column.offset,
+		offsetY=axis.y.column.offset,
+		base={action:"circle",stroke:(this.outline==="none"?columnZ.color:this.outline),"stroke-width":1,"fill-opacity":0.5};
+	zColumns.forEach(c=>c.ratio=zChartRange/c.getRange());
+	axis.x.draw();
+	axis.y.draw();
+	this.chart.dataStore.data.forEach(row=>{
+		const x=axis.x.getPosition(row[offsetX]),
+			y=axis.y.getPosition(row[offsetY]);
+		zColumns.map(c=>{
+			return {color:c.color,z:c.ratio*row[c.offset]};
+		}).sort((a,b)=>b.z-a.z)
+		.forEach(c=>{
+			this.chart.graph({cx:x,cy:y,r:c.z,fill:c.color},base);
+		});
+	});
 };
+IChartBubble.prototype.getMenuOptions=function() {
+	return [this.chart.menuButton("Y Scaling","chart.axis.y.scale.type","AUTO","EXPONENTIAL")];
 
-IChartBubble.prototype.checkOptions=function() {
-	this.checkExists(axis.z.name,'Missing parameter axis.z.name');
 };
-
+IChartLine.prototype.getCoordsPoints=function(xPos,yPos) {
+	throw Error("to be done");
+};

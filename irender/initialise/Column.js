@@ -51,8 +51,8 @@ Column.prototype.getDeltaData = function() {
 	return this.delta;
 };
 Column.prototype.getFormatted = function(i) {
-	if(!this.formatfunction)
-		this.formatfunction=iFormat.getFormatFunction(this.type);
+	if(!this.formatFunction)
+		this.formatFunction=iFormat.getFormatFunction(this.type);
 	return this.formatFunction((this.columnData||this.getColumnData())[i],this.precision);
 };
 Column.prototype.getFormattedInRow = function(row) {
@@ -93,6 +93,18 @@ Column.prototype.getPointsNear = function(value,points) {
 	let pointsFound=[];
 	columnData.forEach((c,i)=>{if(c>min&&c<max) pointsFound.push(i)});
 	return pointsFound;
+};
+Column.prototype.getPercentage = function(value) {
+	return 100*value/(this.sum||this.getSum());
+};
+Column.prototype.getPercentageRow = function(i) {
+	return 100*(this.columnData||this.getColumnData())[i]/(this.sum||this.getSum());
+};
+Column.prototype.getProportion = function(value) {
+	return value/(this.sum||this.getSum());
+};
+Column.prototype.getProportionRow = function(i) {
+	return (this.columnData||this.getColumnData())[i]/(this.sum||this.getSum());
 };
 Column.prototype.getRange = function() {
 	if(this.range==null)

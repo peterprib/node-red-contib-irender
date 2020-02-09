@@ -24,10 +24,20 @@ function Axis(options){
 		},
 		options
 	);
+	if(!this.column && !this.columns) throw Error("column(s) no defined");
 	if(this.column) {
 		this.type=this.column.type;
 	};
-	this.draw=this.direction=="vertical"?this.drawVertical:this.drawHorizontal;
+	switch(this.direction) {
+	 	case "vertical":
+	 		this.draw=this.drawVertical;
+	 		break;
+	 	case "horizontal":
+	 		this.draw=this.drawHorizontal;
+	 		break;
+	 	default:
+	 		this.draw=this.drawSize;
+	}
 	if(this.getMin()==this.getMax()) {
 		if(this.max==0) {
 			this.max=1;
@@ -52,6 +62,12 @@ Axis.prototype.drawHorizontal=function(){
 	const tickBase=Object.assign({y1:this.position-5,y2:this.position+5},this.line);
 	const tickTextBase=Object.assign({y:this.position+7+this.text["font-size"]/2},this.text);
 	this.getTicks().forEach(tick=>this.drawTickHorizontal(tick,tickBase,tickTextBase));
+};
+Axis.prototype.drawSize=function(){
+	this.setPositionAjustment=this.setPositionSize;
+	this.chart.range=this.chart.height - this.chart.offset;
+	this.position=0;
+	this.setScaling();
 };
 Axis.prototype.drawVertical=function(){
 	this.setPositionAjustment=this.setPositionAjustmentVertical;
@@ -109,6 +125,9 @@ Axis.prototype.getMin = function() {
 Axis.prototype.getPosition = function(value) {
 	return this.positionAjustment+this.scale(value);
 };
+Axis.prototype.getPositionValue = function(value) {
+	return this.scaleReverse(value-this.positionAjustment);
+};
 Axis.prototype.getRange=function() {
 	if(this.range==undefined) this.range=this.getMax()-this.getMin();
 	return this.range;
@@ -132,16 +151,19 @@ Axis.prototype.getTicksMeasure=function(metric) {
 };
 Axis.prototype.scaleExponential=function(value){
 	const ratio=this.ratio||this.getRatio();
-	return value==0
-		?0
-		:value>0
-			?Math.log(value*ratio)
-			:-Math.log(-value*ratio);
+	return value==0?0:(value>0?Math.log(value):-Math.log(-value))*(this.ratio||this.getRatio());
+};
+Axis.prototype.scaleExponentialReverse=function(value){
+	return value==0?0:(value>0?Math.pow(Math.E,value):-Math.pow(Math.E,-value))/(this.ratio||this.getRatio());
 };
 Axis.prototype.scaleFixed = function(value) {
 	return value*(this.ratio||this.getRatio());
 };
+Axis.prototype.scaleFixedReverse = function(value) {
+	return value/(this.ratio||this.getRatio());
+};
 Axis.prototype.scale=Axis.prototype.scaleFixed;
+Axis.prototype.scaleReverse=Axis.prototype.scaleReverseFixed;
 
 Axis.prototype.setScaling = function() {
 	this["setScaling"+this.scaling.type]();
@@ -155,12 +177,14 @@ Axis.prototype.setScalingAuto = function() {
 };
 Axis.prototype.setScalingFixed = function() {
 	this.scale=this.scaleFixed;
+	this.scaleReverse=this.scaleFixedReverse;
 	this.ratio=this.chart.range/this.getRange();
 	if(this.ratio==Infinity) this.ratio=1
 	if(isNaN(this.ratio)) throw "ratio calculation error, charting size :"+ this.chart.range + " max:"+ this.max+ " min:"+ this.min;
 };
 Axis.prototype.setScalingExponential = function() {
 	this.scale=this.scaleExponential;
+	this.scaleReverse=this.scaleExponentialReverse;
 	this.getPosition=this.getPositionExponential;
 	this.ratio=this.chart.range/(Math.log(this.min) - Math.log(this.max));
 	if(this.ratio==0) this.ratio=1;
@@ -179,6 +203,9 @@ Axis.prototype.setPositionAjustmentHorizontal = function(value) {
 };
 Axis.prototype.setPositionAjustmentVertical = function(value) {
 	this.positionAjustment=this.chart.height-this.offset-this.scale(value);
+};
+Axis.prototype.setPositionAjustmentSize = function(value) {
+	this.positionAjustment=0;
 };
 Axis.prototype.setType=function(type) {
 	if(type) this.type=type;

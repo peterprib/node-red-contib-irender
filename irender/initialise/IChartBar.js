@@ -1,6 +1,7 @@
 function IChartBar(){
 	
-} 
+}
+IChartBar.prototype.isCartezian=true;
 IChartBar.prototype.drawChart_bar=function () {
 	const yDetails=this.columnIndexDetails.y;
 	this.barWidth=Math.floor(this.tickIncrement/yDetails.size);
@@ -28,4 +29,8 @@ IChartEvents.prototype.getCoordsPoints=function(xPOs,yPos) {
 		"y: "+this.dataToString(1,(this.yOffset-yPos)/this.yRatio)
 	]
 
+};
+
+IChartBar.prototype.getMenuOptions=function() {
+	return [this.chart.menuButton("Chart Type","chart.type","bar","stack")];
 };

@@ -16,8 +16,6 @@ function IChart(base,properties,options) {
 		mouseup:{call:this.svgCoordsReset,object:this}
 		},args[2]);
 	Svg.apply(this,args);
-//	iFormat=new IFormat();
-//	this.setColorPallet();
 	this.processParameters(Object.assign({},properties,options));
 	this.detailXY=this.createElement("table",this.element);
 	this.detailXY.style="font-size:10px; top:0px; left:60px ; position:absolute ; display:none; background:transparent; border:transparent; z-index: 11; background-color: #FFFFFF; filter: alpha(opacity=80); opacity:0.6;";
@@ -72,7 +70,6 @@ IChart.prototype.setOptions=function (options) {
 		},
 		options
 	);
-	this.isCartezian		=this.isLine||['line','bar','setline','stack','bubble'].includes(this.type);
 	if(this.url===null) throw Error("Cannot render chart as url for table not specified");
 };
 IChart.prototype.addDetailXY=function() {
@@ -81,41 +78,9 @@ IChart.prototype.addDetailXY=function() {
 IChart.prototype.buildDataSet=function() {
 	const data=this.dataStore.data;
 	if(data.length <1 && this.onNoDataThrowError) throw Error('No data to chart');
-//	delete this.columnIndexDetails;
 	Object.assign(this,{columnIndex:[],data:[],dataType:[],deltaCol:[],deltaData:[],deltaIndex:[],dataMax:[],dataMin:[],group:[],groupingValue:"",
 		groupValue:[],precision:[],label:[],xTicks:[],yTicks:[]
 	});
-//	this.setColumnDetails(0,this.chart.axis.x.name);
-//	this.processGrouping();
-	let x=-1;
-//	this.xNormaliser=1;
-//	const colX=this.columnIndex[0];
-	const columnX=this.chart.axis.x.column;
-	const columns=this.dataStore.structure;
-/*
-	this.columnIndex.forEach((c,i)=>{
-		const col=this.dataStore.getColumn(c);
-		this.dataMax[i]=col.getMax();
-		this.dataMin[i]=col.getMin();
-	});
-*/
-/*
-	data.forEach((dataRow,row)=>{
-		if(this.grouping==null) {
-			this.clearData(++x);
-		} else {
-			if(x==-1 || dataRow[columnX.offset] !=  data[row-1][columnX.offset]) {
-				this.clearData(++x);
-			}
-			this.setGroupingValue(groupIndex.reduce((a,c)=>a+=' '+ dataRow[c],""));
-		}
-		if(this.isCartezian) this.xTicks[x]=row;
-		this.columnIndex.filter((c,i)=>this.group[i]==this.groupingValue).forEach((columnIndex,i)=>{
-			let value=(columnIndex==null?x+1:dataRow[columnIndex]);
-		this.data[x][i]=value;
-		});
-	});
-*/
 };
 IChart.prototype.chartSize=function() {
 	this.resizeChart();
@@ -145,10 +110,9 @@ IChart.prototype.drawChart=function() {
 	};
 };
 IChart.prototype.getMetricColumnsOptions=function(pane) {
-	const tableCols=this.baseTableData.columnsInfo;
-	this.selectWithOptions(pane,tablesCols,"Y Metrics","ySeries",iFormat.numberTypes);
-	this.selectWithOptions(pane,tablesCols,"Grouping","grouping",iFormat.stringTypes);
-	this.selectWithOptions(pane,tablesCols,"Delta","delta",iFormat.numberTypes);
+	this.selectWithOptions(pane,"Y Metrics","ySeries",iFormat.numberTypes);
+	this.selectWithOptions(pane,"Grouping","grouping",iFormat.stringTypes);
+	this.selectWithOptions(pane,"Delta","delta",iFormat.numberTypes);
 };
 IChart.prototype.menuButton=function(title,property,o1,o2) {
 	return {title:title,action:"input",type:"button",value:(this[property]==o1?o1:o2),name:property,onclick: function(ev) {this.parent.parent.target.setParameter(ev.currentTarget);}};
@@ -159,38 +123,21 @@ IChart.prototype.insertCell=function(element) {
 IChart.prototype.onError=function(error) {
 	alert(error);
 };
-/*
-IChart.prototype.processGrouping=function() {
-	if(this.grouping){
-		this.groupIndex=[];
-		var groupingArray=this.grouping.split(",");
-		for(let j=0; j<groupingArray.length;j++) {
-			const columnName=groupingArray[j];
-			const column=this.dataStore.columns[columnName];
-			if(!isDatabaseConnectionVersion(column)) continue;
-			try{
-				this.groupIndex[j]=column.offset;
-			} catch(e) {
-				throw Error("grouping "+e.toString());
-			}
-		}
-		return;
-	}
-//	this.setColumnIndexDetails("y");
-};
-*/
 IChart.prototype.processParameters=function(options) {
 	this.setOptions(options);
 	this.check("highlight",['first','last','']);
 	this.check("legend.display",[true,false]);
 	this.check("slices",['row','column']);
 	try {
-		this.chartingObject=new window["IChart"+this.type.charAt(0).toUpperCase() + this.type.substring(1)](this);
+		const chartFunction="IChart"+this.type.charAt(0).toUpperCase() + this.type.substring(1);
+		if(chartFunction in window) {
+			this.chartingObject=new window[chartFunction](this);
+		} else {
+			throw Error('Unknown chart type: ' + this.type);
+		}
 	} catch(e) {
-		console.warn(e);
-		throw Error('Unknown chart type: ' + this.type);
+		console.error(e);
 	};
-//	this.chartingObject.checkOptions();   too early as expec axis info which may only come after
 };
 IChart.prototype.refresh=function() {
 	this.firstChartLoad=true;
@@ -207,11 +154,9 @@ IChart.prototype.resizeChart=function() {
 		axisX=this.chart.axis.x,
 		axisY=this.chart.axis.y,
 		axisOffset=this.chart.axis.offset,
-		colX=this.chart.axis.x.column;
+		colX=axisX.column;
 	this.width=paneSize.width;
 	this.height=paneSize.height;
-//	const colY=this.columnIndexDetails.y;
-//	this.xMax=this.width-axisOffset-6;
 	if(colX.isMeasure()) {
 		this.axis.x=new Axis({
 			bound:{lower:null,upper:null},
@@ -220,8 +165,6 @@ IChart.prototype.resizeChart=function() {
 			columns:axisX.columns,
 			direction:"horizontal",
 			graph:this.graph
-//			position:this.height-axisOffset,
-//			type:(axisX.type||colX.type)
 		});
 	}
 	this.axis.y=new Axis({
@@ -231,21 +174,17 @@ IChart.prototype.resizeChart=function() {
 		columns:axisY.columns,
 		direction:"vertical",
 		graph:this.graph
-//		position:axisOffset,
-//		type:(axisY.type||colY.type)
 	});
+	if(this.chart.axis.z.columns)
+		this.axis.z=new Axis({
+			bound:{lower:null,upper:null},
+			chart:this,
+			columns:this.chart.axis.z.columns,
+			direction:"size",
+			graph:this.graph
+		});
 };
-IChart.prototype.scaleNormalY=function(value){
-	return value*this.yRatio;
-};
-IChart.prototype.scaleExponentialNormalY=function(value){
-	return value>0?Math.log(value)*this.yRatio:value<=0?Math.log(this.dataMinaxisY*0.1)*this.yRatio:null;
-};
-IChart.prototype.scaleZ=function(value,j) {
-	const ratio=j&&this.zRatioColumns[j]?this.zRatioColumns[j]:this;
-	return value?(value-ratio.zRatioOffset)*ratio.zRatio:0;
-};
-IChart.prototype.selectWithOptions=function(pane,tablesCols,title,property,types) {
+IChart.prototype.selectWithOptions=function(pane,title,property,types) {
 	let options=[];
 	const metadataColumns=this.dataStore.columns,
 		colsIn=this[property]||[]; 
@@ -262,81 +201,36 @@ IChart.prototype.selectWithOptions=function(pane,tablesCols,title,property,types
 		onchange:function(ev) {this.parent.parent.target.setProperty(ev.srcElement);}
 	});
 };
-/*
-IChart.prototype.setColumnIndexDetails=function(axis) {
-	var isaxisY=(axis=="y");
-	if(this.columnIndexDetails==null) this.columnIndexDetails={};
-	if(this.columnIndexDetails[axis]==null) 
-		this.columnIndexDetails[axis]={
-			columnIndex:[null],
-			dataType:[null],
-			dataStore:[null],
-			dataMin:[null],
-			dataMax:[null],
-			group:[null],
-			label:[null],
-			start: this.columnIndex.length
-		};
-	const columnIndexDetails=this.columnIndexDetails[axis];
-	const series=this[axis+"Series"];
-	if(series instanceof Array){
-		if(isaxisY)
-			series.forEach(c=>this.setColumnDetails(this.columnIndex.length,c))
-		else
-			series.forEach(c=>this.setColumnDetailsAxis(columnIndexDetails,c));
-	}
-	columnIndexDetails.end=(axis=="y"?this.columnIndex.length:columnIndexDetails.columnIndex.length);
-	columnIndexDetails.size=columnIndexDetails.end-columnIndexDetails.start;
-};	
-IChart.prototype.setColumnDetails=function(index,columnName) {
-	if(columnName==null) {
-		this.columnIndex[index]=null;
-		this.dataType[index]='int';
-		this.label[index]=this.groupingValue;
-		this.group[index]=this.groupingValue;
-		return;
-	}
-	const column=this.dataStore.columns[columnName];
-	if(!column.color) column.color=this.colors[index];
-	this.columnIndex[index]=column.offset;
-	this.dataType[index]=column.type;
-	this.label[index]=this.groupingValue + " " + column.title;
-	this.group[index]=this.groupingValue;
-};
-IChart.prototype.setColumnDetailsAxis=function(columnDetails,columnName) {
-	if(columnName==null) throw Error("Column name not specified");
-	const column=this.dataStore.columns[columnName];
-	const index=columnDetails.columnIndex.length;
-	columnDetails.columnIndex[index]=column.offset;
-	columnDetails.dataType[index]=column.type;
-	columnDetails.label[index]=this.groupingValue + " " + column.title;
-	columnDetails.group[index]=this.groupingValue;
-};
-*/
-
 IChart.prototype.setData=function(tableData) {
+	const axis=this.chart.axis;
 	this.firstChartLoad=true;
-	if(this.chart.axis.x.name && this.chart.axis.x.name=="_rowid") {
+	if(axis.x.name && axis.x.name=="_rowid") {
 		this.dataStore.addRowId();
 	} else {
-		if(this.isCartezian) {
+		if(this.chartingObject.isCartezian) {
 			this.dataStore.addRowId();
-			this.chart.axis.x.name="_rowid";
+			axis.x.name="_rowid";
 		} else {
-			this.chart.axis.x.column=this.dataStore.structure(c=>c.columnObject.isMeasure());
-			this.chart.axis.x.name=this.chart.axis.x.column.name;
+			const potentialColumns=this.dataStore.filterColumn(c=>c.isMeasure());
+			axis.x.column=potentialColumns[0];
+			axis.x.name=this.chart.axis.x.column.name;
 		}
 	} 
-	this.chart.axis.x.column=this.dataStore.columns[this.chart.axis.x.name];
-	const columns=this.dataStore.columns;
-	let availableColors=getColorPallet(this.dataStore.structure.length);
-	this.dataStore.structure.forEach(c=>{
-		const color=columns[c.name].color||availableColors.pop();
-		columns[c.name].color=color in colors?colors[color]:color;
-	});
+	axis.x.column=this.dataStore.columns[this.chart.axis.x.name];
+	this.dataStore.setColors();
 	
-	this.ySeries=this.dataStore.structure.filter(c=>columns[c.name].isMeasure()&&c.name!==this.chart.axis.x.name).map(c=>c.name);
-	this.chart.axis.y.columns=this.ySeries.map(c=>this.dataStore.columns[c]);
+	this.ySeries=this.dataStore.filterColumn(c=>c.isMeasure()&&c.name!==this.chart.axis.x.name).map(c=>c.name);
+	axis.y.columns=this.ySeries.map(c=>this.dataStore.columns[c]);
+	if(this.type=="bubble") {
+		if(axis.z.columns==null) {
+			if(!axis.y.columns || axis.y.columns.length<1) {
+				throw Error("z value set and no y axis values available");
+			}
+			console.warn("no z axis selected so selected ones from y axis")
+			axis.z.columns=axis.y.columns.slice(1);
+			axis.y.columns=[axis.y.columns[0]];
+		}
+	}
 	if(this.flipDataSet)			
 		this.dataStore.data.reverse();
 	this.renderTableData();
@@ -344,31 +238,8 @@ IChart.prototype.setData=function(tableData) {
 IChart.prototype.setDataStore=function(dataStore) {
 	this.dataStore=dataStore;
 };
-/*
-IChart.prototype.setGroupingValue=function(newGroupingValue) {
-	if(this.groupValue.includes(newGroupingValue)) return;
-	if(!this.groupValue.includes(this.groupingValue)){
-		this.groupValue.push(this.groupingValue);
-//		this.setColumnIndexDetails("y");
-	}
-};
-*/	
 IChart.prototype.setMenuOptions=function(menuArray=[]) {
-	let options=[];
-	switch (this.type) {
-	case 'pie':
-		options.push(this.menuButton("Slice","slices","row","column"));
-		break;
-	case 'bubble':
-	case 'bubbleandline':
-	case 'line':
-		options.push(this.menuButton("Y Scaling","chart.axis.y.scale.type","AUTO","EXPONENTIAL"));
-		break;
-	case 'bar':
-	case 'stack':
-		options.push(this.menuButton("Chart Type","chart.type","bar","stack"));
-		break;
-	}
+	let options=this.chartingObject.getMenuOptions();
 	options.push(this.menuButton("Legend","chart.legend.display","hide","show"));
 	options.push({title:"Show",action:"input",type:"button",value:"chart",name:"display",onclick: function(ev) {this.parent.parent.target.setParameter(ev.currentTarget);}});
 	options.push({title:"Max. rows",action:"input",type:"text",value:"chart",name:this.baseTableData.maxResultsToFetch,onchange: function(ev) {this.parent.parent.target.setParameter(this);}});
@@ -378,7 +249,7 @@ IChart.prototype.setMenuOptions=function(menuArray=[]) {
 };
 IChart.prototype.setMetrics=function(select) {
 	this.ySeries=select.options.filter(c=>c.selected).map(c=>c.value);
-	this.chart.axis.y.columns=this.ySeries.map(c=>this.dataStore.structure[c].column);
+	this.chart.axis.y.columns=this.ySeries.map(name=>this.getColumn(name));
 	this.renderTableData();
 };
 IChart.prototype.setProperty=function(inputElement) {
@@ -393,7 +264,6 @@ IChart.prototype.setParameter=function(element) {
 		this.hideLegend();
 		elment.value (this.legend.display=="hide"?"show":"hide");
 	}
-	this.chartSize();
 	switch (element.name) {
 	case 'slices': 
 		element.value=(element.value=='row'?'column':'row');
