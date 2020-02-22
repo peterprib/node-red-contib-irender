@@ -56,12 +56,15 @@ function ITableDataRender(element,properties,md,mp,data) {
 	}
 	return this;
 };
+ITableDataRender.prototype.maxColumns = function (n) {
+	return this.data.reduce((a,c)=>Math.max(a,c.length),0);
+};
 ITableDataRender.prototype.addRowId = function (n) {
-	this.data.forEach((c,i)=>c.push(i));
-	//set column details
-	const c={name:"_rowid",type:"number",title:"Id"};
-	this.structure.push(c);
-	this.setColumn(c,this.structure.length-1);
+	const columnMetaData={name:"_rowid",type:"number",title:"Id",offset:0};
+	this.data.forEach((c,i)=>c.unshift(i));
+	this.structure.forEach(column=>this.columns[column.name].offset++);
+	this.structure.unshift(columnMetaData);
+	this.setColumn(columnMetaData,0);
 };
 ITableDataRender.prototype.appendTo = function (n) {
 	document.getElementById(n).appendChild(this.getHTMLTable());
@@ -195,6 +198,26 @@ ITableDataRender.prototype.getHTMLTable = function () {
 	});
 	return t;
 };
+ITableDataRender.prototype.groupBy = function (order) {
+	this.data=this.groupedData(order);
+	return this.data; 
+};
+ITableDataRender.prototype.groupedData = function (order) {
+	const groupOffsets=[],addOffsets=[],
+		data=this.sortedData(order);
+	this.structure.forEach((c,i)=>(order.includes(c.name)?groupOffsets:addOffsets).push(c.offset));
+	return data.reduce((a,r)=>{
+		if(a.length==0) return a.push(r);
+		const last=a[a.length]; 
+		groupOffsets.forEach(c=>{
+			const i=c.offset;
+			if(a[i]==last[i]) next;
+			return a.push(r)
+		});
+		addOffsets.forEach(c=>last[i]+=r[i]);
+		return a;
+	},[]);
+};
 ITableDataRender.prototype.hideRow = function (ev,r) {
 	this.tbody.childNodes[r].style.display="none";
 };
@@ -251,6 +274,13 @@ ITableDataRender.prototype.setColors = function () {
 		this.columns[c.name].color=color in colors?colors[color]:color;
 	});
 }
+ITableDataRender.prototype.setColumn = function (c,i) {
+	if(!c.name) c.name=c.column||"col"+(i+1);
+	const column=new Column({data:this.data,offset:i,type:c.type},c);
+	this.columns[column.name]=column;
+	c.columnObject=column;
+	return column 
+};
 ITableDataRender.prototype.setLoading = function () {
 	if(this.element.IRender) {
 		if(this.element.IRender.setLoading) {
@@ -261,13 +291,6 @@ ITableDataRender.prototype.setLoading = function () {
 	} else {
 	    this.element.appendChild(document.createTextNode("Loading "));
 	}
-};
-ITableDataRender.prototype.setColumn = function (c,i) {
-	if(!c.name) c.name=c.column||"col"+(i+1);
-	const column=new Column({data:this.data,offset:i,type:c.type},c);
-	this.columns[column.name]=column;
-	c.columnObject=column;
-	return column 
 };
 ITableDataRender.prototype.setMetaData = function (md) {
 	this.metaData=md;
@@ -282,6 +305,9 @@ ITableDataRender.prototype.setMapping = function (m) {
 //		column.offset=(typeof c.column === 'string'?this.columns[c.column].offset:offset=c.column-1);
 		return column;
 	});
+};
+ITableDataRender.prototype.sortedBy = function (order) {
+	this.data=this.sortedData();
 };
 ITableDataRender.prototype.sortedData = function (order) {
 	//[{offset:0,direction:1},

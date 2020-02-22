@@ -67,12 +67,12 @@ Column.prototype.getFormattedValue = function(v) {
 };
 Column.prototype.getMax = function() {
 	if(this.max==null)
-		this.max=Math.max(...this.getColumnData());
+		this.max=this.getValidNumber(Math.max(...this.getColumnData()));
 	return this.max;
 };
 Column.prototype.getMin = function() {
 	if(this.min==null)
-		this.min=Math.min(...this.getColumnData());
+		this.min=this.getValidNumber(Math.min(...this.getColumnData()));
 	return this.min;
 };
 Column.prototype.getNormalizedData = function() {
@@ -81,24 +81,26 @@ Column.prototype.getNormalizedData = function() {
 		if(range) {
 			const avg=this.getAvg(),
 				offset=range/avg;
-			this.normalizedData=this.getColumn.data.map(c=>c/range-offset);
+			this.normalizedData=this.getValidNumber(this.getColumn.data.map(c=>c/range-offset));
 		} else
-			this.normalizedData=this.getColumn.data.map(c=>0);
+			this.normalizedData=this.getValidNumber(this.getColumn.data.map(c=>0));
+		
 	}
 	return this.normalizedData;
-};
-Column.prototype.getPointsNear = function(value,points) {
-	const min=value-5,max=value+5,columnData=(this.columnData||this.getColumnData());
-	if(points) return points.filter(i=>{const c=columnData[i]; return c>min&&c<max});
-	let pointsFound=[];
-	columnData.forEach((c,i)=>{if(c>min&&c<max) pointsFound.push(i)});
-	return pointsFound;
 };
 Column.prototype.getPercentage = function(value) {
 	return 100*value/(this.sum||this.getSum());
 };
 Column.prototype.getPercentageRow = function(i) {
 	return 100*(this.columnData||this.getColumnData())[i]/(this.sum||this.getSum());
+};
+Column.prototype.getPointsNear = function(value,points,radiusChart=5) {
+	const radius=this.scaleReverse(radiusChart),
+		min=value-radius,max=value+radius,columnData=(this.columnData||this.getColumnData());
+	if(points) return points.filter(i=>{const c=columnData[i]; return min<=c&&c<=max});
+	let pointsFound=[];
+	columnData.forEach((c,i)=>{if(min<=c&&c<=max) pointsFound.push(i)});
+	return pointsFound;
 };
 Column.prototype.getProportion = function(value) {
 	return value/(this.sum||this.getSum());
@@ -108,12 +110,12 @@ Column.prototype.getProportionRow = function(i) {
 };
 Column.prototype.getRange = function() {
 	if(this.range==null)
-		this.range=this.getMax()-this.getMin();
+		this.range=this.getValidNumber(this.getMax()-this.getMin());
 	return this.range;
 };
 Column.prototype.getRatio = function() {
 	if(this.ratio==null)
-		this.ratio=this.getMax()/this.getRange();
+		this.ratio=this.getValidNumber(this.getMax()/this.getRange());
 	return this.ratio;
 };
 Column.prototype.getRow = function(i) {
@@ -132,6 +134,10 @@ Column.prototype.getSum = function() {
 		this.sum=(this.columnData||this.getColumnData()).reduce((c,a)=>c+a, this.isMeasure()?0:"")
 	return this.sum;
 };
+Column.prototype.getValidNumber = function(value) {
+	if(isNaN(value)) throw Error(this.name+" or its calculation does have valid number but has value "+value);
+	return value;
+};
 Column.prototype.isDateTime = function() {
 	return iFormat.isDateTime(this.type);
 };
@@ -147,18 +153,15 @@ Column.prototype.isTimestamp = function() {
 Column.prototype.isTimestamp = function() {
 	return iFormat.isTimestamp(this.type);
 };
-/*
-Column.prototype.setPositionOffset = function(value) {
-	this.positionOffset=value+this.scale(this.getMin());
-	return this;
-};
-*/
 Column.prototype.setRatio = function(value) {
 	this.ratio=value;
 	return this
 };
 Column.prototype.scale = function(value) {
 	return value*(this.ratio||this.getRatio());
+};
+Column.prototype.scaleReverse = function(value) {
+	return (this.ratio||this.getRatio())/value;
 };
 Column.prototype.scaleExponential=function(value){
 	const ratio=this.ratio||this.getRatio();

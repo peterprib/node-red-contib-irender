@@ -292,21 +292,22 @@ IChart.prototype.svgCoords=function(evt) {
 		this.detailXY.deleteRow(0);
 	this.svgCoordsDetails(x,y);
 	this.detailXY.style.display='table';
-	const detailXY=this.detailXY.getBoundingClientRect();
+	const detailXY=this.detailXY.getBoundingClientRect()
+		axisX=this.axis.x,axisY=this.axis.y;
 	this.detailXY.style.top=(evt.clientY-(y<this.height/2?-5:detailXY.height+5))+'px';
 	this.detailXY.style.left=(evt.clientX-(x<this.width/2?-5:detailXY.width+5))+'px';
 	let crosshairs=[];
-	if(x>this.axisX.position) 
-		crosshairs.push({action:"line",x1:x+0.5,y1:this.axisY.position,x2:x+0.5,y2:"0",stroke:"black","stroke-width":1});
-	if(y<this.xaxisY.position)
-		crosshairs.push({action:"line",x1:this.axisX.position,y1:y+0.5,x2:this.width,y2:y+0.5,stroke:"black","stroke-width":1});
+	if(x>axisY.position) 
+		crosshairs.push({action:"line",x1:x,x2:x,y1:0,y2:axisX.position,stroke:"black","stroke-width":1});
+	if(y<axisX.position)
+		crosshairs.push({action:"line",x1:axisY.position,x2:this.width,y1:y,y2:y,stroke:"black","stroke-width":1});
 	this.crosshairs=this.graph({action:"g",id:"crosshairs",children:crosshairs});
 };
 IChart.prototype.svgCoordsDetails=function(xPos,yPos) {
 	const indexDetails=this.columnIndexDetails,
 		colX=this.columnIndex[0];
 	let	XYRow=this.addDetailXY();
-	this.chartingObject.getCoordsPoints(xPos,yPos).forEach(c=>this.chart.insertCell(XYRow,c));
+	this.chartingObject.getCoordsPoints(xPos,yPos); //.forEach(c=>this.chart.insertCell(XYRow,c));
 };
 IChart.prototype.svgCoordsReset=function() {
 	this.detailXY.style.display='none';

@@ -228,7 +228,7 @@ IFormat.prototype.formatNumberToAbbreviated = (value)=>{
 		else if (value>=10000) valueAbbr = value.toFixed(0).toString();
 		else if (value>=1000) valueAbbr = value.toFixed(1).toString();
 		else if (value>=100) valueAbbr = value.toFixed(2).toString();
-		else if (value>=10) valueAbbr = value.toFixed(3).toString();
+		else if (value>=10) valueAbbr = value.toPrecision(3).toString();
 		else if (value<10) valueAbbr = value.toPrecision(2).toString();
 		else valueAbbr = value.toString();
 	}

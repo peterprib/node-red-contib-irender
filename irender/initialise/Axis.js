@@ -180,7 +180,7 @@ Axis.prototype.setScalingFixed = function() {
 	this.scaleReverse=this.scaleFixedReverse;
 	this.ratio=this.chart.range/this.getRange();
 	if(this.ratio==Infinity) this.ratio=1
-	if(isNaN(this.ratio)) throw "ratio calculation error, charting size :"+ this.chart.range + " max:"+ this.max+ " min:"+ this.min;
+	if(isNaN(this.ratio)) throw Error("ratio calculation error, charting size :"+ this.chart.range + " max:"+ this.max+ " min:"+ this.min);
 };
 Axis.prototype.setScalingExponential = function() {
 	this.scale=this.scaleExponential;
@@ -212,7 +212,7 @@ Axis.prototype.setType=function(type) {
 	if(iFormat.isMeasure(type)) {
 		this.getTicks=this.getTicksMeasure;
 	} else {
-		throw 'Unknown type: "'+type+'" for axis tick creation, check types are numeric';
+		throw Error('Unknown type: "'+type+'" for axis tick creation, check types are numeric');
 	}
 	return this;
 };

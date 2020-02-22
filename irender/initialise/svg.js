@@ -328,7 +328,7 @@ Svg.prototype.pattern=function(p) {
 };
 Svg.prototype.polarToCartesian=function(centreX, centreY, radius, angleInDegrees) {
 	const angleInRadians=(angleInDegrees-90)*Math.PI/180.0;
-	return centreX+(radius*Math.cos(angleInRadians))+" "+centreY+(radius*Math.sin(angleInRadians));
+	return centreX+(radius*Math.cos(angleInRadians))+" "+(centreY+(radius*Math.sin(angleInRadians)));
 };
 Svg.prototype.positionFixed=function(e,x,y) {
 	Object.assign(e.style,{left:x+"px",top:y+"px"});

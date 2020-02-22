@@ -1,18 +1,5 @@
 function IChartBubble(chart){
 	this.chart=chart;
-//	this.chart.checkExists(axis.z.name,'Missing parameter axis.z.name');
-/*	
-	const columnZ=this.chart.axis.z.column;
-	const rangeZ=columnZ.getRange();
-	if(rangeZ==0) {
-		rangeZ=zDetails.getMin();
-		this.zRatioOffset==0;
-	} else 
-		this.zRatioOffset=this.zDataMin;
-	this.zRatio=this.bubbleRatio*(Math.min(this.yMax,this.xMax)/rangeZ);
-	if(this.zRatio==Infinity) this.zRatio=this.bubbleRatio;
-	if(isNaN(this.zRatio)) throw "z ratio calculation error, charting width:"+ zDetails.getMin() + " max:"+ Math.max.apply(Math,this.columnIndexDetails.z.dataMax) + " min:"+ zDetails.getMax());
-*/
 }
 IChartBubble.prototype.isCartezian=true;
 IChartBubble.prototype.draw=function() {
@@ -23,6 +10,10 @@ IChartBubble.prototype.draw=function() {
 		offsetX=axis.x.column.offset,
 		offsetY=axis.y.column.offset,
 		base={action:"circle",stroke:(this.outline==="none"?columnZ.color:this.outline),"stroke-width":1,"fill-opacity":0.5};
+	this.chart.addLegendRow({},"x axis: " + axis.x.column.title);
+	this.chart.addLegendRow({},"y axis: " + axis.y.column.title);
+	axis.z.columns.forEach(c=>this.chart.addLegendRow({},c.title,c.color));
+
 	zColumns.forEach(c=>c.ratio=zChartRange/c.getRange());
 	axis.x.draw();
 	axis.y.draw();
@@ -30,17 +21,34 @@ IChartBubble.prototype.draw=function() {
 		const x=axis.x.getPosition(row[offsetX]),
 			y=axis.y.getPosition(row[offsetY]);
 		zColumns.map(c=>{
-			return {color:c.color,z:c.ratio*row[c.offset]};
+			return {color:c.color,z:c.ratio*row[c.offset],title:' z: '+row[c.offset]};
 		}).sort((a,b)=>b.z-a.z)
 		.forEach(c=>{
-			this.chart.graph({cx:x,cy:y,r:c.z,fill:c.color},base);
+			this.chart.graph({cx:x,cy:y,r:c.z,fill:c.color,title:'x: '+row[offsetX]+' y: '+row[offsetY]+c.title},base);
 		});
 	});
 };
 IChartBubble.prototype.getMenuOptions=function() {
 	return [this.chart.menuButton("Y Scaling","chart.axis.y.scale.type","AUTO","EXPONENTIAL")];
-
 };
-IChartLine.prototype.getCoordsPoints=function(xPos,yPos) {
-	throw Error("to be done");
+IChartBubble.prototype.getCoordsPoints=function(xPos,yPos) {
+	const axis=this.chart.axis,
+		columnX=axis.x.column;
+	let y=this.chart.offset - yPos;
+	if(["FIXED","AUTO"].includes(axis.y.scale.type)) {
+	} else if(!this.chart.axis.y.scale.type=="NOAXIS") {
+		this.chart.insertCell(this.chart.addDetailXY(),
+			...["x: "+this.dataToString(0,xBase.plot),"y: "+this.dataToString(1,yBase.plot)]);
+	}
+	this.chart.dataStore.data.forEach(row=>{
+		zColumns.forEach(c=>{
+			const radius=c.ratio*row[c.offset];
+			const xPoints=columnX.getPointsNear(axis.x.getPositionValue(xPos),null,radius);
+			axis.y.columns.forEach((column)=>{
+				column.getPointsNear(axis.x.getPositionValue(yPos),xPoints,radius).forEach(i=>{
+					this.chart.insertCell(this.chart.addDetailXY(),column.title,"x: "+columnX.getFormatted(i),"y: "+column.getFormatted(i));
+				});
+			});
+		});
+	});
 };
