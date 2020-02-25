@@ -109,18 +109,10 @@ Axis.prototype.getCount = function() {
 	return this.count;
 };
 Axis.prototype.getMax = function() {
-	if(this.max==null)
-		this.max=this.columns
-			?this.columns.reduce((a,c)=>Math.max(c.getMax(),a),null)
-			:this.column.getMax();
-	return this.max;
+	return this.max||this.setMax();
 };
 Axis.prototype.getMin = function() {
-	if(this.min==null)
-		this.min=this.columns
-			?this.columns.reduce((a,c)=>Math.min(c.getMin(),a),null)
-			:this.column.getMin();
-	return this.min;
+	return this.min||this.setMin();
 };
 Axis.prototype.getPosition = function(value) {
 	return this.positionAjustment+this.scale(value);
@@ -130,14 +122,13 @@ Axis.prototype.getPositionValue = function(value) {
 };
 Axis.prototype.getRange=function() {
 	if(this.range==undefined) this.range=this.getMax()-this.getMin();
-	return this.range;
+	return this.range||this.setRange();
 };
 Axis.prototype.getRatio = function() {
 	if(this.ratio==null)
 		this.ratio=this.getMax()/this.getRange();
 	return this.ratio;
 };
-
 Axis.prototype.getTicksMeasure=function(metric) {
 	this.tick.positions=[];
 	this.tick.span=this.getRange()/this.tick.count;
@@ -168,6 +159,45 @@ Axis.prototype.scaleReverse=Axis.prototype.scaleReverseFixed;
 Axis.prototype.setScaling = function() {
 	this["setScaling"+this.scaling.type]();
 };
+Axis.prototype.setMax = function(max) {
+	if(max) {
+		this.max=max;
+	} else {
+		this.max=this.columns
+			?this.columns.reduce((a,c)=>Math.max(c.getMax(),a),null)
+			:this.column.getMax();
+	}
+	this.range=null;
+	return this.max;
+};
+Axis.prototype.setMin = function(min) {
+	if(min) {
+		this.min=min;
+	} else {
+		this.min=this.columns
+			?this.columns.reduce((a,c)=>Math.min(c.getMin(),a),null)
+			:this.column.getMin();
+	}
+	this.range=null;
+	return this.min;
+};
+Axis.prototype.setPositionAjustmentHorizontal = function(value) {
+	this.positionAjustment=this.offset-this.scale(value);
+};
+Axis.prototype.setPositionAjustmentVertical = function(value) {
+	this.positionAjustment=this.chart.height-this.offset-this.scale(value);
+};
+Axis.prototype.setPositionAjustmentSize = function(value) {
+	this.positionAjustment=0;
+};
+Axis.prototype.setRange = function(range) {
+	if(range) {
+		this.range=range;
+	} else {
+		this.range=this.getMax()-this.getMin();
+	}
+	return this.range;
+};
 Axis.prototype.setScalingAuto = function() {
 //	if(this.scaling.up)
 //		this.max=this.dataMaxaxisY;
@@ -197,15 +227,6 @@ Axis.prototype.setTickCount=function(count) {
 		this.tick.count=1;
 	}
 	return this;
-};
-Axis.prototype.setPositionAjustmentHorizontal = function(value) {
-	this.positionAjustment=this.offset-this.scale(value);
-};
-Axis.prototype.setPositionAjustmentVertical = function(value) {
-	this.positionAjustment=this.chart.height-this.offset-this.scale(value);
-};
-Axis.prototype.setPositionAjustmentSize = function(value) {
-	this.positionAjustment=0;
 };
 Axis.prototype.setType=function(type) {
 	if(type) this.type=type;

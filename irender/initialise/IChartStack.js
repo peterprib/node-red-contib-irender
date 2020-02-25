@@ -3,17 +3,19 @@ function IChartStack(chart){
 }
 IChartStack.prototype.isCartezian=true;
 IChartStack.prototype.draw=function() {
-	const axis=this.chart.chart.axis
-		rect={action:"rect",width:this.chart.barWidth,stroke:this.chart.outline,"stroke-width":this.chart.lineWidth};
-	this.chart.drawAxisY();
-	this.chart.barWidth=this.tickIncrement;
-	for(let i=0; i<this.data.length; i++) {
-		const xPos=this.chart.axis.x.position+Math.floor((i+0.5)*this.tickIncrement);
-		const total=axis.y.columns.reduce((c,a)=>a+(c.getRow(i)||0),0);
-		let yPos=this.chart.axis.y.position-this.scaleY(total);
+	this.barWidth=this.tickIncrement;
+	const axis=this.chart.axis,
+		outline=this.chart.outline=="none"?null:this.outline;
+		rect={action:"rect",width:this.barWidth,stroke:this.chart.outline,"stroke-width":this.chart.lineWidth};
+	axis.x.draw();
+	axis.y.draw();
+	for(let i=0; i<this.chart.dataStore.data.length; i++) {
+		const xPos=axis.x.position+Math.floor((i+0.5)*this.tickIncrement);
+		const total=axis.y.columns.reduce((a,c)=>a+(c.getRow(i)||0),0);
+		let yPos=axis.y.getPosition(total);
 		axis.y.columns.forEach(c=>{
 			const y=c.getScaledRow(i);
-			this.chart.graph(rect,{x:xPos,y:yPos,height:y,stroke:this.outline=="none"?c.color:this.chart.outline,fill:c.color});
+			this.chart.graph(rect,{x:xPos,y:yPos,height:y,stroke:(outline||c.color),fill:c.color,title:c.title});
 			yPos+=y;
 		});
 	}

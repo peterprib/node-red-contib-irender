@@ -126,8 +126,6 @@ IChart.prototype.onError=function(error) {
 IChart.prototype.processParameters=function(options) {
 	this.setOptions(options);
 	this.check("highlight",['first','last','']);
-	this.check("legend.display",[true,false]);
-	this.check("slices",['row','column']);
 	try {
 		const chartFunction="IChart"+this.type.charAt(0).toUpperCase() + this.type.substring(1);
 		if(chartFunction in window) {
@@ -135,6 +133,7 @@ IChart.prototype.processParameters=function(options) {
 		} else {
 			throw Error('Unknown chart type: ' + this.type);
 		}
+		if("check" in this.chartingObject) this.chartingObject.check();
 	} catch(e) {
 		console.error(e);
 	};

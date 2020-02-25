@@ -38,10 +38,10 @@ function Loading (f) {
 }
 const loading=new Loading();
 (function() {
-	loading.loadJs("https://unpkg.com/vis-network@latest/dist/vis-network.min.js");
-	loading.loadLink("https://unpkg.com/vis-network@latest/dist/vis-network.min.css");
-	loading.loadJs("https://visjs.github.io/vis-timeline/dist/vis-timeline-graph2d.min.js");
-	loading.loadLink("https://visjs.github.io/vis-timeline/dist/vis-timeline-graph2d.min.css");
+//	loading.loadJs("https://unpkg.com/vis-network@latest/dist/vis-network.min.js");
+//	loading.loadLink("https://unpkg.com/vis-network@latest/dist/vis-network.min.css");
+//	loading.loadJs("https://visjs.github.io/vis-timeline/dist/vis-timeline-graph2d.min.js");
+//	loading.loadLink("https://visjs.github.io/vis-timeline/dist/vis-timeline-graph2d.min.css");
 //	loading.loadJs("https://unpkg.com/vis-graph3d@latest");
 })()
 loading.finished();

@@ -1,53 +1,75 @@
 function IChartPie(chart) {
 	this.chart=chart;
-	if(this.isSlicesByRow) {
-		
-	}
-	this.getData=this.isSlicesByRow?this.getDataRow:this.getDataColumn;
 }
 IChartPie.prototype.getColumns=function() {
-	if(!this.columns)
-		this.columns=this.chart.axis.y.columns.length==0
-			?this.data.filter(c=>c.isMeasure())
-			:this.chart.axis.y.columns;
+	if(!this.columns) {
+		this.columns=this.chart.axis.y.columns.filter(c=>c.isMeasure());
+	}
 	return this.columns;
-}
-IChartPie.prototype.getDataRow=function(i) {
-	return this.getColumns()[i].columnObject.getColumnData();
-}
+};
 IChartPie.prototype.getDataColumn=function(i) {
 	return this.getColumns().map(c=>this.data[i][c.offset]);
 }
-IChartPie.prototype.draw=function() {
-	this.isSlicesByRow=(this.slices=='row');
-	const axis=this.chart.axis;
+IChartPie.prototype.getDataRow=function(i) {
+	return this.getColumns()[i].getColumnData();
+};
+IChartPie.prototype.getTitleRow=function(i) {
+	return this.columns[i].title;
+};
+IChartPie.prototype.getTitleColumn=function(i) {
+	const column=this.chart.axis.x.column;
+	return column?column.name+":"+this.chart.dataStore.data[i][column.offset]:null;
+};
+IChartPie.prototype.setChartType=function() {
 	this.data=this.chart.dataStore.data;
-	if(this.chart.height==0  || this.chart.width==0) return;
-	const piesCount=(this.isSlicesByRow?this.getColumns.length:this.data.length),
-		squareSize=Math.min(Math.sqrt((this.chart.height*this.chart.width)/(piesCount+1)),
-				this.chart.height,this.chart.width)
-	if(squareSize<30)
-		throw Error('Not enough space to draw pie chart, number of charts: '+piesCount+' chart width:' + this.chart.width + 'height:' + this.chart.height);
-	
-	let colorPallet=[],label=[];
+	this.isSlicesByRow=(this.chart.slices=='row');
+	this.colorPallet=[];
+	this.labels=[];
 	if(this.isSlicesByRow) {
+		this.getData=this.getDataRow;
+		this.getTitle=this.getTitleRow;
+		this.chartNumber=this.getColumns().length;
 		this.data.forEach((c,i)=>{
 			const color=colorsBase[i];
-			this.addLegendRow({},c[0],color);
-			colorPallet.push(color);
-			label.push(c[0]);
+			this.chart.addLegendRow({},c[this.chart.axis.x.column.offset],color);
+			this.colorPallet.push(color);
+		});
+		const column=this.chart.axis.x.column;
+		this.data.forEach((cell)=>{
+			this.labels.push(column.title+"="+cell[column.offset]);
 		});
 	} else {
-		axis.y.columns.forEach((c,i)=>{
-			this.chart.addLegendRow({},c.title,c.color);
-			colorPallet.push(c.color);
-			label.push(c.title);
+		this.getData=this.getDataColumn;
+		this.getTitle=this.getTitleColumn;
+		this.chartNumber=this.data.length;
+		this.chart.axis.y.columns.forEach((column)=>{
+			this.chart.addLegendRow({},column.title,column.color);
+			this.colorPallet.push(column.color);
+			this.labels.push(column.title);
 		});
-	} 
+	}
+}
+IChartPie.prototype.draw=function() {
+	if(this.chart.height==0  || this.chart.width==0) return;
+	this.setChartType();
+	const axis=this.chart.axis,
+		squareSize=Math.min(Math.sqrt((this.chart.height*this.chart.width)/(this.chartNumber+1)),
+				this.chart.height,this.chart.width)
+	if(squareSize<30)
+		throw Error('Not enough space to draw pie chart, number of charts: '+this.chartNumber+' chart width:' + this.chart.width + 'height:' + this.chart.height);
 	
-	for(let xPos=0,yPos=0,i=0; i<piesCount; i++) {
-		const data=this.getData(i);
-		this.drawPie(xPos,yPos,squareSize,data,colorPallet,label);
+	for(let xPos=0,yPos=0,i=0; i<this.chartNumber; i++) {
+		const title=this.getTitle(i);
+		if(title)
+			this.chart.graph({action:"text",x:xPos,y:yPos+10,"font-size":this.chart.pie.label.size,children:[title]});
+		try{
+			const data=this.getData(i);
+			this.drawPie(xPos,yPos,squareSize,data);
+		} catch (e) {
+			console.warn(e);
+			const fontSize=this.chart.pie.label.size;
+			this.chart.graph({action:"text",x:x,y:y+1+fontSize,"font-size":fontSize,children:[e.message]});
+		}
 		xPos+=squareSize;
 		if(xPos>this.chart.width) {
 			xPos=0;
@@ -57,7 +79,7 @@ IChartPie.prototype.draw=function() {
 		}
 	}
 };
-IChartPie.prototype.drawPie=function(x,y,diameter,data,colorPallet,label) {
+IChartPie.prototype.drawPie=function(x,y,diameter,data) {
 	const xCentre=x+diameter/2,
 		yCentre=y+diameter/2,
 		radius=diameter/2*0.98,
@@ -65,15 +87,14 @@ IChartPie.prototype.drawPie=function(x,y,diameter,data,colorPallet,label) {
 	if(!total) return;
 	const unitDegreesRatio=360/total;
 	for(let angleStart,	angleEnd=0,	i=0; i<data.length; i++) {
-		const color=colorPallet[i],
+		const color=this.colorPallet[i],
 			value=data[i];
 		if(value==null) continue;
 		angleStart=angleEnd;
 		angleEnd+=unitDegreesRatio*value;
 		this.chart.graph({action:"path",d:this.describeArc(xCentre,yCentre,radius,angleStart,angleEnd),
-			stroke:color,"stroke-width":this.chart.lineWidth,fill:color,title:label[i]+" : "+value});
+			stroke:color,"stroke-width":this.chart.lineWidth,fill:color,title:this.labels[i]+" : "+value});
 	}
-//	this.chart.graph({action:"text",x:x,y:y+10,"font-size":this.chart.pie.label.size,children:[this.dataStore.data[i][this.columnIndex[0]]]});
 };
 IChartPie.prototype.describeArc=function(x, y, radius, startAngle, endAngle) {
 	const start=this.chart.polarToCartesian(x, y, radius, endAngle),
@@ -85,4 +106,9 @@ IChartPie.prototype.describeArc=function(x, y, radius, startAngle, endAngle) {
 };
 IChartPie.prototype.getMenuOptions=function() {
 	return [this.chart.menuButton("Slice","slices","row","column")]
+};
+IChartPie.prototype.getCoordsPoints=function(xPos,yPos) {
+};
+IChartPie.prototype.check=function() {
+	this.chart.check("slices",['row','column']);
 };
