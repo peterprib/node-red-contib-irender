@@ -169,7 +169,7 @@ ITableDataRender.prototype.getColumn = function (name) {
 };
 ITableDataRender.prototype.getData = function (url) {
 	if(url) this.url=url;
-    if((this.url||"")=="/") throw Error("url not specified");
+    if((this.url||"/")=="/") throw Error("url not specified");
     this.getUrl=this.url;
     this.refresh();
 };

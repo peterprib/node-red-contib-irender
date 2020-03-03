@@ -99,6 +99,9 @@ Axis.prototype.drawTickVertical=function(tick,tickBase,tickTextBase) {
 	if(!(label==null))
 		this.chart.graph({y:y+5,children:[label]},tickTextBase);
 };
+Axis.prototype.find = function(name) {
+	return this.columns.find(c=>c.name==name);
+};
 Axis.prototype.getAbbreviatedValue = function(value) {
 	if(this.formatAbbreviateFunction===undefined) this.formatAbbreviate=iFormat.getFormatAbbreviatedFunction(this.type)
 	return this.formatAbbreviateFunction(value,this.precision);
@@ -113,6 +116,9 @@ Axis.prototype.getMax = function() {
 };
 Axis.prototype.getMin = function() {
 	return this.min||this.setMin();
+};
+Axis.prototype.getMinDelta = function() {
+	return this.minDelta||this.setMinDelta();
 };
 Axis.prototype.getPosition = function(value) {
 	return this.positionAjustment+this.scale(value);
@@ -177,6 +183,17 @@ Axis.prototype.setMin = function(min) {
 		this.min=this.columns
 			?this.columns.reduce((a,c)=>Math.min(c.getMin(),a),null)
 			:this.column.getMin();
+	}
+	this.range=null;
+	return this.min;
+};
+Axis.prototype.setMinDelta = function() {
+	if(min) {
+		this.min=min;
+	} else {
+		this.min=this.columns
+			?this.columns.reduce((a,c)=>Math.min(c.getMinDelta(),a),null)
+			:this.column.getMinDelta();
 	}
 	this.range=null;
 	return this.min;

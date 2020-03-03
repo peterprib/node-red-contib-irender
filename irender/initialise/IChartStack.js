@@ -3,6 +3,8 @@ function IChartStack(chart){
 }
 IChartStack.prototype.isCartezian=true;
 IChartStack.prototype.draw=function() {
+	
+	
 	this.barWidth=this.tickIncrement;
 	const axis=this.chart.axis,
 		outline=this.chart.outline=="none"?null:this.outline;

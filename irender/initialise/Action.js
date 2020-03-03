@@ -17,7 +17,7 @@ Action.prototype.exec_chart = function (node,ev,properties) {
 					chart.element
 				),
 //			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
-			floatingPane=this.exec_floatingPane(chart.element,ev,{onCloseHide:true,initiallyHide:true}),
+			floatingPane=this.exec_floatingPane(chart,ev,{onCloseHide:true,initiallyHide:true},{parent:p}),
 			table=this.exec_table(floatingPane.getPane(),
 				Object.assign({onLoad:load},node.passing,this.passing)
 			);
@@ -27,7 +27,7 @@ Action.prototype.exec_chart = function (node,ev,properties) {
 //		.addAction({id:"charDisplay",type:"floatingPane",function:floatingPane.show})
 
 		p.headerRow.addRight([{image:"tableIcon",action:"display",tableData:table}]); 
-		p.headerRow.addRefresh({callFunction:table.refresh,object:table}); 
+		p.headerRow.addRefresh({callFunction:chart.refresh,object:chart}); 
 	} catch(ex) {
 		this.setCatchError(node,ex);
 	}
@@ -48,14 +48,14 @@ Action.prototype.exec_fileReader = function (node) {
 	    request.withCredentials = "true";
     	request.send();
 	};
-Action.prototype.exec_floatingPane = function (node,ev,p) {
+Action.prototype.exec_floatingPane = function (node,ev,p,target) {
 	if(node.pane && node.pane.openDependant(this.id)){
 		return;
 	}
 	return new PaneFloat(this.base,
 		Object.assign({},this.base.getPane(this.pane||"_tabPane"),this.passing,p),  //paneProperties
 		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,p),  // options
-		this.getTarget(node),
+		target||this.getTarget(node),
 		this  // action
 	);
 };

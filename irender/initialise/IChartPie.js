@@ -29,14 +29,16 @@ IChartPie.prototype.setChartType=function() {
 		this.getData=this.getDataRow;
 		this.getTitle=this.getTitleRow;
 		this.chartNumber=this.getColumns().length;
-		this.data.forEach((c,i)=>{
-			const color=colorsBase[i];
-			this.chart.addLegendRow({},c[this.chart.axis.x.column.offset],color);
-			this.colorPallet.push(color);
-		});
+//		this.data.forEach((c,i)=>{
+//			this.chart.addLegendRow({},c[this.chart.axis.x.column.offset],color);
+//		});
 		const column=this.chart.axis.x.column;
-		this.data.forEach((cell)=>{
-			this.labels.push(column.title+"="+cell[column.offset]);
+		this.data.forEach((cell,i)=>{
+			const color=colorsBase[i];
+			const title=column.title+"="+cell[column.offset];
+			this.chart.addLegendRow({},title,color);
+			this.labels.push(title);
+			this.colorPallet.push(color);
 		});
 	} else {
 		this.getData=this.getDataColumn;
@@ -64,7 +66,7 @@ IChartPie.prototype.draw=function() {
 			this.chart.graph({action:"text",x:xPos,y:yPos+10,"font-size":this.chart.pie.label.size,children:[title]});
 		try{
 			const data=this.getData(i);
-			this.drawPie(xPos,yPos,squareSize,data);
+			this.drawPie(xPos,yPos+10,squareSize-5,data);
 		} catch (e) {
 			console.warn(e);
 			const fontSize=this.chart.pie.label.size;

@@ -24,14 +24,10 @@ Column.prototype.getAbbreviatedValue = function(value) {
 	return this.formatAbbreviateFunction(value,this.precision);
 };
 Column.prototype.getAvg = function() {
-	if(this.avg==null)
-		this.avg=this.sum(d)/this.columnData.length;
-	return this.avg;
+	return this.avg||this.setAvg();
 };
 Column.prototype.getColumnData = function() {
-	if(!this.columnData)
-		this.columnData=this.data.map(r=>r[this.offset]);
-	return this.columnData;
+	return this.columnData||this.setColumnData();
 };
 Column.prototype.getCount = function() {
 	return this.data.length
@@ -46,9 +42,7 @@ Column.prototype.getDataLast = function() {
 	return (this.columnData||this.getColumnData())[this.columnData.length-1];
 };
 Column.prototype.getDeltaData = function() {
-	if(!this.delta && this.isMeasure())
-		this.delta=this.getColumnData().map((cell,index,arr)=>arr[index+1]-arr[index]);
-	return this.delta;
+	return this.delta||this.setDeltaData();
 };
 Column.prototype.getFormatted = function(i) {
 	if(!this.formatFunction)
@@ -66,14 +60,13 @@ Column.prototype.getFormattedValue = function(v) {
 	return this.formatFunction(v,this.precision);
 };
 Column.prototype.getMax = function() {
-	if(this.max==null)
-		this.max=this.getValidNumber(Math.max(...this.getColumnData()));
-	return this.max;
+	return this.max||this.setMax();
 };
 Column.prototype.getMin = function() {
-	if(this.min==null)
-		this.min=this.getValidNumber(Math.min(...this.getColumnData()));
-	return this.min;
+	return this.min||this.setMin();
+};
+Column.prototype.getMinDelta = function() {
+	return this.min||this.setMinDelta();
 };
 Column.prototype.getNormalizedData = function() {
 	if(!this.normalizedData) {
@@ -109,14 +102,10 @@ Column.prototype.getProportionRow = function(i) {
 	return (this.columnData||this.getColumnData())[i]/(this.sum||this.getSum());
 };
 Column.prototype.getRange = function() {
-	if(this.range==null)
-		this.range=this.getValidNumber(this.getMax()-this.getMin());
-	return this.range;
+	return this.range||this.setRange();
 };
 Column.prototype.getRatio = function() {
-	if(this.ratio==null)
-		this.ratio=this.getValidNumber(this.getMax()/this.getRange());
-	return this.ratio;
+	return this.ratio||this.setRatio();
 };
 Column.prototype.getRow = function(i) {
 	return (this.columnData||this.getColumnData())[i];
@@ -153,10 +142,6 @@ Column.prototype.isTimestamp = function() {
 Column.prototype.isTimestamp = function() {
 	return iFormat.isTimestamp(this.type);
 };
-Column.prototype.setRatio = function(value) {
-	this.ratio=value;
-	return this
-};
 Column.prototype.scale = function(value) {
 	return value*(this.ratio||this.getRatio());
 };
@@ -170,4 +155,37 @@ Column.prototype.scaleExponential=function(value){
 		:value>0
 			?Math.log(value*ratio)
 			:-Math.log(-value*ratio);
+};
+Column.prototype.setAvg = function() {
+	this.avg=this.sum(d)/this.columnData.length;
+	return this.avg;
+};
+Column.prototype.setColumnData = function() {
+	this.columnData=this.data.map(r=>r[this.offset]);
+	return this.columnData;
+};
+Column.prototype.setDeltaData = function() {
+	if(this.isMeasure())
+		this.delta=this.getColumnData().map((cell,index,arr)=>arr[index+1]-arr[index]);
+	return this.delta;
+};
+Column.prototype.setMax = function() {
+	this.max=this.getValidNumber(Math.max(...this.getColumnData()));
+	return this.max;
+};
+Column.prototype.setMin = function() {
+	this.min=this.getValidNumber(Math.min(...this.getColumnData()));
+	return this.min;
+};
+Column.prototype.setMinDelta = function() {
+	this.min=this.getValidNumber(Math.min(...this.getDeltaData()));
+	return this.min;
+};
+Column.prototype.setRange = function() {
+	this.range=this.getValidNumber(this.getMax()-this.getMin());
+	return this.range;
+};
+Column.prototype.setRatio = function() {
+	this.ratio=this.getValidNumber(this.getMax()/this.getRange());
+	return this.ratio;
 };

@@ -94,7 +94,6 @@ IChart.prototype.check=function(p,a) {
 IChart.prototype.checkExists=function(value,errorMessage) {
 	if(value==null) throw Error("check exists error: "+errorMessage);
 };
-
 IChart.prototype.display=function() {
 	this.dataStore.getHTMLTable();
 	this.dataStore.displayPane();
@@ -106,8 +105,12 @@ IChart.prototype.drawChart=function() {
 		this.chartingObject.draw();
 	} catch(e) {
 		console.warn(e);
-		throw Error("drawing " + this.type + "\n" + e.toString());
+		this.displayError("drawing " + this.type + "\n" + e.toString())
 	};
+};
+IChart.prototype.displayError=function(message) {
+	console.warn(message);
+	this.graph({action:"text",x:this.width/2-message.length/2,y:this.height/2-5,"font-size":10,children:[message]});
 };
 IChart.prototype.getMetricColumnsOptions=function(pane) {
 	this.selectWithOptions(pane,"Y Metrics","ySeries",iFormat.numberTypes);
@@ -139,8 +142,7 @@ IChart.prototype.processParameters=function(options) {
 	};
 };
 IChart.prototype.refresh=function() {
-	this.firstChartLoad=true;
-	this.retrieveTableData();
+	this.dataStore.refresh();
 };
 IChart.prototype.renderTableData=function() {
 	if(this.firstChartLoad && this.delta==null && this.autoDelta)
@@ -217,9 +219,7 @@ IChart.prototype.setData=function(tableData) {
 	} 
 	axis.x.column=this.dataStore.columns[this.chart.axis.x.name];
 	this.dataStore.setColors();
-	
-	this.ySeries=this.dataStore.filterColumn(c=>c.isMeasure()&&c.name!==this.chart.axis.x.name).map(c=>c.name);
-	axis.y.columns=this.ySeries.map(c=>this.dataStore.columns[c]);
+	axis.y.columns=this.dataStore.filterColumn(c=>c.isMeasure()&&axis.x.column.name!==c.name).map(c=>c.columnObject);
 	if(this.type=="bubble") {
 		if(axis.z.columns==null) {
 			if(!axis.y.columns || axis.y.columns.length<1) {
@@ -245,11 +245,6 @@ IChart.prototype.setMenuOptions=function(menuArray=[]) {
 	this.getMetricColumnsOptions(options);
 	this.optionsDialog.setContent('<table>'+options+this.getMetricColumnsOptions(options)+'</table>','Options', null, null, null);
 	return menuArray;
-};
-IChart.prototype.setMetrics=function(select) {
-	this.ySeries=select.options.filter(c=>c.selected).map(c=>c.value);
-	this.chart.axis.y.columns=this.ySeries.map(name=>this.getColumn(name));
-	this.renderTableData();
 };
 IChart.prototype.setProperty=function(inputElement) {
 	this[inputElement.name]=inputElement.children.filter(c=>c.selected).map(c=>c.value);

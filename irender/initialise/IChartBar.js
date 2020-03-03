@@ -6,14 +6,20 @@ IChartBar.prototype.draw=function () {
 	const axis=this.chart.axis,
 		outline=(this.chart.outline==="none"?null:this.chart.outline),
 		data=this.chart.dataStore.data,
+		observations=axis.x.getCount(),
 		tickIncrement=this.chart.tickIncrement;
+	const minDelta=axis.x.getMinDelta();
+	if(observations==0) throw Error("over lapping x axis values");
+	if(observations>1) {
+		if(minDelta==0) throw Error("over lapping x axis values");
+	} else {
+		this.barWidth=11/axis.x.columns.length;
+	}
+
 	axis.x.draw();
 	axis.y.draw();
 	
-	
-	
-	
-	this.barWidth=Math.floor(tickIncrement/axis.y.getRange);  // several columns at a location  must get diff and
+	this.barWidth=Math.floor(tickIncrement/axis.y.getRange());  // several columns at a location  must get diff and
 	this.chart.dataStore.data.forEach((row,i)=>{
 		axis.y.columns.forEach((column,j)=>{
 			const data=row[column.offset];
@@ -28,6 +34,8 @@ IChartBar.prototype.draw=function () {
 			});
 		});
 	});
+};
+IChartEvents.prototype.showError=function(xPOs,yPos) {
 };
 IChartEvents.prototype.getCoordsPoints=function(xPOs,yPos) {
 	const x=Math.floor((xPos - this.chart.axis.x.position)/this.tickIncrement-0.5);
