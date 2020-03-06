@@ -56,7 +56,7 @@ Axis.prototype.adjustRange = function(adjustment) {
 };
 Axis.prototype.drawHorizontal=function(){
 	this.setPositionAjustment=this.setPositionAjustmentHorizontal;
-	this.chart.range=this.chart.width - this.chart.offset;
+	this.chartRange=this.chart.width - this.chart.offset;
 	this.position=this.chart.height-this.chart.offset;
 	this.setScaling();
 	this.chart.graph({
@@ -71,7 +71,7 @@ Axis.prototype.drawHorizontal=function(){
 };
 Axis.prototype.drawSize=function(){
 	this.setPositionAjustment=this.setPositionSize;
-	this.chart.range=this.chart.height - this.chart.offset;
+	this.chartRange=this.chart.height - this.chart.offset;
 	this.position=0;
 	this.setScaling();
 };
@@ -117,7 +117,7 @@ Axis.prototype.getCount = function() {
 	return this.count;
 };
 Axis.prototype.getChartRange = function() {
-	return this.chart.range||this.setChartRange();
+	return this.chartRange||this.setChartRange();
 };
 Axis.prototype.getMax = function() {
 	return this.max||this.setMax();
@@ -170,12 +170,12 @@ Axis.prototype.scaleFixedReverse = function(value) {
 Axis.prototype.scale=Axis.prototype.scaleFixed;
 Axis.prototype.scaleReverse=Axis.prototype.scaleReverseFixed;
 Axis.prototype.setChartRangeHorizontal=function(){
-	this.chart.range=this.chart.width - this.chart.offset;
-	return this.chart.range;
+	this.chartRange=this.chart.width - this.chart.offset;
+	return this.chartRange;
 }
 Axis.prototype.setChartRangeVertical=function(){
-	this.chart.range=this.chart.height - this.chart.offset;
-	return this.chart.range;
+	this.chartRange=this.chart.height - this.chart.offset-5;
+	return this.chartRange;
 }
 Axis.prototype.setMax = function(max) {
 	if(max==undefined) {

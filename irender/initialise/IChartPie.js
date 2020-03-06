@@ -66,7 +66,7 @@ IChartPie.prototype.draw=function() {
 			this.chart.graph({action:"text",x:xPos,y:yPos+10,"font-size":this.chart.pie.label.size,children:[title]});
 		try{
 			const data=this.getData(i);
-			this.drawPie(xPos,yPos+10,squareSize-5,data);
+			this.drawPie(xPos,yPos+10,squareSize-10,data);
 		} catch (e) {
 			console.warn(e);
 			const fontSize=this.chart.pie.label.size;
