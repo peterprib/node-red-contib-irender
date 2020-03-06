@@ -166,7 +166,7 @@ Column.prototype.setColumnData = function() {
 };
 Column.prototype.setDeltaData = function() {
 	if(this.isMeasure())
-		this.delta=this.getColumnData().map((cell,index,arr)=>arr[index+1]-arr[index]);
+		this.delta=this.getColumnData().map((cell,index,arr)=>index?arr[index]-arr[index-1]:null);
 	return this.delta;
 };
 Column.prototype.setMax = function() {
@@ -174,12 +174,12 @@ Column.prototype.setMax = function() {
 	return this.max;
 };
 Column.prototype.setMin = function() {
-	this.min=this.getValidNumber(Math.min(...this.getColumnData()));
+	this.min=this.getValidNumber(Math.min(...(this.getColumnData())));
 	return this.min;
 };
 Column.prototype.setMinDelta = function() {
-	this.min=this.getValidNumber(Math.min(...this.getDeltaData()));
-	return this.min;
+	this.minDelta=this.getValidNumber(Math.min(...this.getDeltaData().slice(1)));
+	return this.minDelta;
 };
 Column.prototype.setRange = function() {
 	this.range=this.getValidNumber(this.getMax()-this.getMin());

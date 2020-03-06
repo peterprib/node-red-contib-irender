@@ -24,10 +24,10 @@ IChartLine.prototype.draw=function(plot=this.plot) {
 			}
 			baseAttributes.stroke=columnY.color;
 			if(this.chart.highlight=='first' && data.length)
-				this.drawPoint(columnX.getDataFirst(),columnY.getDataFirst());
+				this.drawPoint(columnX.getDataFirst(),columnY.getDataFirst(),columnX.title,columnY.title);
 			this.plot(columnX,columnY,baseAttributes,basePointAttributes);
 			if(this.highlight=='last' && data.length)
-				this.drawPoint(columnX.getDataLast(),columnY.getDataLast());
+				this.drawPoint(columnX.getDataLast(),columnY.getDataLast(),columnX.title,columnY.title);
 		} catch(e) {
 			console.warn(e);
 			errors += ' error plotting '+columnY.title+' '+e +'\n';
@@ -35,9 +35,9 @@ IChartLine.prototype.draw=function(plot=this.plot) {
 	});
 	if(errors) throw Error(errors);
 };
-IChartLine.prototype.drawPoint=function(x,y) { 
+IChartLine.prototype.drawPoint=function(x,y,xLabel,yLabel) { 
 	const axis=this.chart.axis;
-	this.chart.graph(basePointAttributes,{cx:axis.x.getPosition(x),cy:axis.y.getPosition(y),title:"x: "+x+" y: "+y});
+	this.chart.graph(basePointAttributes,{cx:axis.x.getPosition(x),cy:axis.y.getPosition(y),title:xLabel+": "+x+" "+yLabel+": "+y});
 };
 IChartLine.prototype.plot=function(colX,colY,baseAttributes,basePointAttributes) { 
 	const axis=this.chart.axis;
@@ -47,7 +47,7 @@ IChartLine.prototype.plot=function(colX,colY,baseAttributes,basePointAttributes)
 		try{
 			if(dataX!==null && dataY!==null) {
 				const x=axis.x.getPosition(dataX), y=axis.y.getPosition(dataY);
-				this.chart.graph(basePointAttributes,{cx:x,cy:y,title:"x: "+dataX+" y: "+dataY});
+				this.chart.graph(basePointAttributes,{cx:x,cy:y,title:colX.title+": "+dataX+" "+colY.title+": "+dataY});
 				points.push(x+","+y);
 			} else if(points.length>0) {
 				this.chart.graph(baseAttributes,{points:points.join(" ")});

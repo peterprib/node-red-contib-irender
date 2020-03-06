@@ -31,9 +31,11 @@ function Axis(options){
 	switch(this.direction) {
 	 	case "vertical":
 	 		this.draw=this.drawVertical;
+	 		this.setChartRange=this.setChartRangeVertical;
 	 		break;
 	 	case "horizontal":
 	 		this.draw=this.drawHorizontal;
+	 		this.setChartRange=this.setChartRangeHorizontal;
 	 		break;
 	 	default:
 	 		this.draw=this.drawSize;
@@ -48,6 +50,10 @@ function Axis(options){
 	}
 	this.setType(this.type||"number");
 }
+Axis.prototype.adjustRange = function(adjustment) {
+	this.setMin(this.getMin()+adjustment/2);
+	this.setMax(this.getMax()+adjustment/2);
+};
 Axis.prototype.drawHorizontal=function(){
 	this.setPositionAjustment=this.setPositionAjustmentHorizontal;
 	this.chart.range=this.chart.width - this.chart.offset;
@@ -71,7 +77,6 @@ Axis.prototype.drawSize=function(){
 };
 Axis.prototype.drawVertical=function(){
 	this.setPositionAjustment=this.setPositionAjustmentVertical;
-	this.chart.range=this.chart.height - this.chart.offset;
 	this.position=this.chart.offset;
 	this.setScaling();
 	this.ratio=-this.ratio
@@ -110,6 +115,9 @@ Axis.prototype.getCount = function() {
 	if(this.count==null)
 		this.count=this.column.getCount();
 	return this.count;
+};
+Axis.prototype.getChartRange = function() {
+	return this.chart.range||this.setChartRange();
 };
 Axis.prototype.getMax = function() {
 	return this.max||this.setMax();
@@ -161,42 +169,48 @@ Axis.prototype.scaleFixedReverse = function(value) {
 };
 Axis.prototype.scale=Axis.prototype.scaleFixed;
 Axis.prototype.scaleReverse=Axis.prototype.scaleReverseFixed;
-
-Axis.prototype.setScaling = function() {
-	this["setScaling"+this.scaling.type]();
-};
+Axis.prototype.setChartRangeHorizontal=function(){
+	this.chart.range=this.chart.width - this.chart.offset;
+	return this.chart.range;
+}
+Axis.prototype.setChartRangeVertical=function(){
+	this.chart.range=this.chart.height - this.chart.offset;
+	return this.chart.range;
+}
 Axis.prototype.setMax = function(max) {
-	if(max) {
-		this.max=max;
-	} else {
+	if(max==undefined) {
 		this.max=this.columns
 			?this.columns.reduce((a,c)=>Math.max(c.getMax(),a),null)
 			:this.column.getMax();
+	} else {
+		this.max=max;
 	}
 	this.range=null;
 	return this.max;
 };
 Axis.prototype.setMin = function(min) {
-	if(min) {
-		this.min=min;
-	} else {
+	if(min==undefined) {
 		this.min=this.columns
 			?this.columns.reduce((a,c)=>Math.min(c.getMin(),a),null)
 			:this.column.getMin();
+	} else {
+		this.min=min;
 	}
 	this.range=null;
 	return this.min;
 };
-Axis.prototype.setMinDelta = function() {
-	if(min) {
-		this.min=min;
-	} else {
-		this.min=this.columns
-			?this.columns.reduce((a,c)=>Math.min(c.getMinDelta(),a),null)
+Axis.prototype.setMinDelta = function(min) {
+	if(min==undefined) {
+		this.minDelta=this.columns
+			?this.columns.reduce((a,c)=>c==null?a:Math.min(c.getMinDelta(),a),null)
 			:this.column.getMinDelta();
+	} else {
+		this.minDelta=min;
 	}
-	this.range=null;
-	return this.min;
+	return this.minDelta;
+};
+Axis.prototype.setScaling = function() {
+	this["setScaling"+this.scaling.type]();
 };
 Axis.prototype.setPositionAjustmentHorizontal = function(value) {
 	this.positionAjustment=this.offset-this.scale(value);
@@ -225,15 +239,15 @@ Axis.prototype.setScalingAuto = function() {
 Axis.prototype.setScalingFixed = function() {
 	this.scale=this.scaleFixed;
 	this.scaleReverse=this.scaleFixedReverse;
-	this.ratio=this.chart.range/this.getRange();
+	this.ratio=this.getChartRange()/this.getRange();
 	if(this.ratio==Infinity) this.ratio=1
-	if(isNaN(this.ratio)) throw Error("ratio calculation error, charting size :"+ this.chart.range + " max:"+ this.max+ " min:"+ this.min);
+	if(isNaN(this.ratio)) throw Error("ratio calculation error, charting size :"+ this.getChartRange() + " max:"+ this.max+ " min:"+ this.min);
 };
 Axis.prototype.setScalingExponential = function() {
 	this.scale=this.scaleExponential;
 	this.scaleReverse=this.scaleExponentialReverse;
 	this.getPosition=this.getPositionExponential;
-	this.ratio=this.chart.range/(Math.log(this.min) - Math.log(this.max));
+	this.ratio=this.getChartRange()/(Math.log(this.min) - Math.log(this.max));
 	if(this.ratio==0) this.ratio=1;
 };
 Axis.prototype.setTickCount=function(count) {
