@@ -51,7 +51,7 @@ function Axis(options){
 	this.setType(this.type||"number");
 }
 Axis.prototype.adjustRange = function(adjustment) {
-	this.setMin(this.getMin()+adjustment/2);
+	this.setMin(this.getMin()-adjustment/2);
 	this.setMax(this.getMax()+adjustment/2);
 };
 Axis.prototype.drawHorizontal=function(){

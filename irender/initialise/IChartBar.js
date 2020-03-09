@@ -10,23 +10,16 @@ IChartBar.prototype.draw=function () {
 		observations=axis.x.getCount(),
 		xOffset=axis.x.column.offset,
 		tickIncrement=this.chart.tickIncrement;
-	let barWidth;
 	if(observations==0) throw Error("over lapping x axis values");
-	if(observations>1) {
-		const barRange=axis.x.getMinDelta();
-		if(barRange==0) throw Error("over lapping x axis values");
-		barWidth=barRange/yColumnCount;
-		axis.x.adjustRange(barRange);
-	} else {
-		const barRange=axis.x.getMin();
-	}
+	const barRange=observations>1?axis.x.getMinDelta():axis.x.getMin();
+	if(barRange==0) throw Error("over lapping x axis values");
+	const barWidth=barRange/yColumnCount;
+	axis.x.adjustRange(barRange);
 	const startAdjustment=yColumnCount*barWidth/2;
 	axis.x.draw();
 	axis.y.draw();
-	
-//	this.barWidth=Math.floor(tickIncrement/axis.y.getRange());  // several columns at a location  must get diff and
+	const rectBase={action:"rect",width:axis.x.scale(barWidth),"stroke-width":this.lineWidth}
 	this.chart.dataStore.data.forEach((row,i)=>{
-//		const xPos=axis.x.position+Math.floor((i+0.5)*tickIncrement)+(j-1)*this.barWidth;
 		const x=row[xOffset];
 		let xAdjusted=x-startAdjustment
 		axis.y.columns.forEach((column,j)=>{
@@ -34,28 +27,18 @@ IChartBar.prototype.draw=function () {
 				xPos=axis.x.getPosition(xAdjusted);
 			if(data==null) return;
 			const yPos=axis.y.getPosition(data);
-			this.chart.graph({action:"rect",x:xPos,y:yPos,width:barWidth,
-				height:axis.x.position-yPos,
-				stroke:(outline||column.color),
-				"stroke-width":this.lineWidth,
+			this.chart.graph(rectBase,{x:xPos,y:yPos,height:axis.x.position-yPos,stroke:(outline||column.color),
 				fill:column.color,
 				title:x+" " +column.title+" : "+data
 			});
 			xAdjusted+=barWidth;
 		});
 	});
+	axis.y.columns.forEach(c=>this.chart.addLegendRow({},c.title,c.color));
 };
-IChartPie.prototype.getCoordsPoints=function(xPos,yPos) {
+IChartBar.prototype.getCoordsPoints=function(xPos,yPos) {
 };
-IChartEvents.prototype.showError=function(xPOs,yPos) {
-};
-IChartEvents.prototype.getCoordsPoints=function(xPOs,yPos) {
-	const x=Math.floor((xPos - this.chart.axis.x.position)/this.tickIncrement-0.5);
-	return ["x:",this.chart.axis.x.column.isDateTime()
-		?this.dataToString(0,(xPos -this.xOffset)/this.chart.axis.x.getRatio())
-				:this.chart.dataStore.data[x][colX],
-		"y: "+this.dataToString(1,(this.yOffset-yPos)/this.yRatio)
-	]
+IChartBar.prototype.showError=function(xPOs,yPos) {
 };
 IChartBar.prototype.getMenuOptions=function() {
 	return [this.chart.menuButton("Chart Type","chart.type","bar","stack")];

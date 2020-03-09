@@ -292,6 +292,13 @@ ITableDataRender.prototype.setLoading = function () {
 	    this.element.appendChild(document.createTextNode("Loading "));
 	}
 };
+ITableDataRender.prototype.getMaxRowSum = function(columns=this.structure) {
+	return Math.max(...this.getRowSum(columns));
+};
+ITableDataRender.prototype.getRowSum = function(columns=this.structure) {
+	return this.data.map(row=>columns.reduce((a,c)=>a+=row[c.offset],0));
+};
+
 ITableDataRender.prototype.setMetaData = function (md) {
 	this.metaData=md;
 	this.columns={};
