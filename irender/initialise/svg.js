@@ -28,8 +28,8 @@ function Svg(base,properties,options) {
 	this.set(Object.assign({},properties,{width:"100%",height:"100%"}));
 	this.element.appendChild(this.svg);
 	this.loadUseShapes(this.shapes);
-	if(options.legend) this.addLegend(options.legend);
 	this.addBase();
+	if(options.legend) this.addLegend(options.legend);
 	if(this.options.mouseCoords==null || this.options.mouseCoords)
 		this.mouse=new MouseSvg(this);
 	if(this.editable)
@@ -172,6 +172,10 @@ Svg.prototype.createFloat=function(title) {
 		.setMapping(this.shapes.square);
 	this.floatPaneDetail.appendChild(this.form.element);
 };
+Svg.prototype.displayLegend=function() {
+	this.legendElement.setStyle({'display': (this.legend.display?"block":"none")});
+	return this;
+};
 Svg.prototype.draw=function(p) {
 	this.drawObject(p);
 	return this;
@@ -246,7 +250,8 @@ Svg.prototype.graph=function() {
 	return this.drawObject(Object.assign({},...arguments),this.base)
 };
 Svg.prototype.hideLegend=function() {
-	this.legendElement.setStyle({'display': (this.legend.displa?"none":"block")});
+	this.legendElement.setStyle({'display': (this.legend.display?"none":"block")});
+	return this;
 };
 Svg.prototype.iconEnter=function(ev) {
 	Object.assign(ev.target.style,{cursor:"pointer",filter:"invert(100%)"})
