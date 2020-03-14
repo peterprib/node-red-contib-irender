@@ -28,6 +28,12 @@ IChartBubble.prototype.draw=function() {
 		});
 	});
 };
+IChartBubble.prototype.chartCircle=function(base,x,y,z,color,title) {
+	this.chart.graph(base,{action:"circle",cx:x,cy:y,r:z,fill:color,title:title});
+};
+IChartBubble.prototype.chartCandle=function(base,x,y,z,title) {
+	this.chart.graph(base,{action:"rect",x:x-2,y:y-z/2,height:z,width:4,fill:color,title:title});
+};
 IChartBubble.prototype.getMenuOptions=function() {
 	return [this.chart.menuButton("Y Scaling","chart.axis.y.scale.type","AUTO","EXPONENTIAL")];
 };

@@ -1,14 +1,15 @@
 function IChartEvents(chart) {
 	this.chart=chart;
-	this.axis=this.chart.chart.axis;
 }
-IChartEvents.prototype.drawChart_events=function(data) {
-	const colX=this.axis.x.column.offset;
+IChartEvents.prototype.draw=function(data) {
+	const colX=this.axis.x.column.offset,
+		line={action:"line",y1:0,y2:this.chart.axis.y.position,stroke:"red","stroke-width":this.lineWidth,"fill-opacity":0.8};
+	axis.x.draw();
 	for(let j=0 ; j<data.length; j++) {
 		const dataX=data[j][colX];
 		if(dataX==null || isNaN(dataX) ) continue;
 		const plotX=this.xPositionScale(dataX);
-		this.graph({action:"line",x1:plotX,y1:0,x2:plotX,y2:this.chart.axis.y.position,stroke:"red","stroke-width":this.lineWidth,"fill-opacity":0.8});
+		this.graph(line,{x1:plotX,x2:plotX});
 	}
 };
 IChartEvents.prototype.getCoordsPoints=function(x) {

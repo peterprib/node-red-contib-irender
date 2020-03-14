@@ -24,10 +24,10 @@ function Axis(options){
 		},
 		options
 	);
-	if(!this.column && !this.columns) throw Error("column(s) no defined");
 	if(this.column) {
 		this.type=this.column.type;
-	};
+	} else if(!this.columns) throw Error("column(s) no defined");
+ 
 	switch(this.direction) {
 	 	case "vertical":
 	 		this.draw=this.drawVertical;
@@ -145,7 +145,9 @@ Axis.prototype.getRatio = function() {
 };
 Axis.prototype.getTicksMeasure=function(metric) {
 	this.tick.positions=[];
-	this.tick.span=this.getRange()/this.tick.count;
+	const range=this.getRange(),
+		digits=Math.floor(Math.log10(range));
+	this.tick.span=range/this.tick.count;
 	let value=this.min;
 	while (value<=this.max) {
 		this.tick.positions.push(value);

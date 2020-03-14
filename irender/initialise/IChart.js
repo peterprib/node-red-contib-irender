@@ -56,7 +56,7 @@ IChart.prototype.setOptions=function (options) {
 		height:100,
 		highlight:'',
 		lineWidth:1,
-		offset:20,
+		offset:30,
 		onNoDataThrowError:true,
 		outline:'black',
 		pie:{label:{font:{size:10}}},
@@ -142,7 +142,7 @@ IChart.prototype.processParameters=function(options) {
 	};
 };
 IChart.prototype.refresh=function() {
-	this.dataStore.refresh();
+	this.dataStore.refresh.apply(this.dataStore);
 };
 IChart.prototype.renderTableData=function() {
 	if(this.firstChartLoad && this.delta==null && this.autoDelta)

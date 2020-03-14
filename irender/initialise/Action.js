@@ -11,7 +11,7 @@ function Action (b,p) {
 Action.prototype.exec_chart = function (node,ev,properties) {
 	try{
 		const chart=new IChart(this.base,this.passing,{loadDefer:true}),
-			load={callFunction:chart.setData,object:chart,onError:null},
+			load={callFunction:chart.setData,object:chart,onError:chart.displayError},
 			p=new Pane(this.base,
 					Object.assign({tab:false,title:node.title||""},this.base.getPane(this.pane||"_tabPane"),this.passing),
 					chart.element

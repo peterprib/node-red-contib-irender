@@ -223,10 +223,8 @@ ITableDataRender.prototype.hideRow = function (ev,r) {
 };
 ITableDataRender.prototype.processData = function (data) {
     Object.assign(this,JSON.parse(data));
-    if(!this.metaData) {
-        this.setMetaData(this.structure);
-        this.setMapping(this.structure);
-    }
+    this.setMetaData(this.structure);
+    this.setMapping(this.structure);
     this.getHTMLTable();
     if(this.onLoad) {
     	try{
