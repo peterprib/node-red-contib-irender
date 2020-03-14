@@ -9,7 +9,7 @@ function Axis(options){
 			direction:"horizontal",
 			bound:{lower:null,upper:null},
 			line:{action:"line",width:1,stroke:"black","stroke-width":1},
-			offset:20,
+			offset:30,
 			position:0,
 			scaling:{
 				type:"Fixed",
@@ -56,11 +56,11 @@ Axis.prototype.adjustRange = function(adjustment) {
 };
 Axis.prototype.drawHorizontal=function(){
 	this.setPositionAjustment=this.setPositionAjustmentHorizontal;
-	this.chartRange=this.chart.width - this.chart.offset;
-	this.position=this.chart.height-this.chart.offset;
+	this.chartRange=this.chart.width - this.offset;
+	this.position=this.chart.height-this.offset;
 	this.setScaling();
 	this.chart.graph({
-			x1:this.chart.offset,y1:this.position,
+			x1:this.offset,y1:this.position,
 			x2:this.chart.width,y2:this.position
 		},
 		this.line
@@ -71,23 +71,23 @@ Axis.prototype.drawHorizontal=function(){
 };
 Axis.prototype.drawSize=function(){
 	this.setPositionAjustment=this.setPositionSize;
-	this.chartRange=this.chart.height - this.chart.offset;
+	this.chartRange=this.chart.height - this.offset;
 	this.position=0;
 	this.setScaling();
 };
 Axis.prototype.drawVertical=function(){
 	this.setPositionAjustment=this.setPositionAjustmentVertical;
-	this.position=this.chart.offset;
+	this.position=this.offset;
 	this.setScaling();
 	this.ratio=-this.ratio
 	this.chart.graph({
-			x1:this.position,y1:this.chart.height-this.chart.offset,
+			x1:this.position,y1:this.chart.height-this.offset,
 			x2:this.position,y2:0
 		},
 		this.line
 	);
-	const tickBase=Object.assign({x1:this.chart.offset-5,x2:this.chart.offset+5},this.line);
-	const tickTextBase=Object.assign({x:this.chart.offset-5},this.text);
+	const tickBase=Object.assign({x1:this.offset-5,x2:this.offset+5},this.line);
+	const tickTextBase=Object.assign({x:this.offset-5},this.text);
 	this.getTicks().forEach(tick=>this.drawTickVertical(tick,tickBase,tickTextBase));
 };
 Axis.prototype.drawTickHorizontal=function(tick,tickBase,tickTextBase) {
@@ -172,11 +172,11 @@ Axis.prototype.scaleFixedReverse = function(value) {
 Axis.prototype.scale=Axis.prototype.scaleFixed;
 Axis.prototype.scaleReverse=Axis.prototype.scaleReverseFixed;
 Axis.prototype.setChartRangeHorizontal=function(){
-	this.chartRange=this.chart.width - this.chart.offset;
+	this.chartRange=this.chart.width - this.offset;
 	return this.chartRange;
 }
 Axis.prototype.setChartRangeVertical=function(){
-	this.chartRange=this.chart.height - this.chart.offset-5;
+	this.chartRange=this.chart.height - this.offset-5;
 	return this.chartRange;
 }
 Axis.prototype.setMax = function(max) {

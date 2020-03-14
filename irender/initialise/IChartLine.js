@@ -70,7 +70,7 @@ IChartLine.prototype.checkOptions=function() {
 };
 IChartLine.prototype.getCoordsPoints=function(xPos,yPos) {
 	const axis=this.chart.axis;
-	let y=this.chart.offset - yPos;
+	let y=this.chart.axis.y.offset - yPos;
 	if(["FIXED","AUTO"].includes(axis.y.scale.type)) {
 	} else if(!this.chart.axis.y.scale.type=="NOAXIS") {
 		this.chart.insertCell(this.chart.addDetailXY(),

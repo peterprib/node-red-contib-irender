@@ -56,7 +56,6 @@ IChart.prototype.setOptions=function (options) {
 		height:100,
 		highlight:'',
 		lineWidth:1,
-		offset:30,
 		onNoDataThrowError:true,
 		outline:'black',
 		pie:{label:{font:{size:10}}},
@@ -154,7 +153,6 @@ IChart.prototype.resizeChart=function() {
 	const paneSize=this.getPaneSize(),
 		axisX=this.chart.axis.x,
 		axisY=this.chart.axis.y,
-		axisOffset=this.chart.axis.offset,
 		colX=axisX.column;
 	this.width=paneSize.width;
 	this.height=paneSize.height;

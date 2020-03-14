@@ -40,7 +40,7 @@ IChartBubble.prototype.getMenuOptions=function() {
 IChartBubble.prototype.getCoordsPoints=function(xPos,yPos) {
 	const axis=this.chart.axis,
 		columnX=axis.x.column;
-	let y=this.chart.offset - yPos;
+	let y=this.chart.axis.y.offset - yPos;
 	if(["FIXED","AUTO"].includes(axis.y.scale.type)) {
 	} else if(!this.chart.axis.y.scale.type=="NOAXIS") {
 		this.chart.insertCell(this.chart.addDetailXY(),
