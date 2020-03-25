@@ -1,14 +1,10 @@
-function PaneFloat(base,paneProperties,options,target,action) {
-//	this.element=css.setClass(createDiv(),"PaneFloat");
-//	base.floatHandle.appendChild(this.element);
+function PaneFloat(base,paneProperties,options,target,action,floatHandle) {
 	this.pane=new Pane(base,
 		Object.assign({},paneProperties,{closable:true,tab:false}),  //paneProperties
-		base.floatHandle,  //parentElememt
-//		this.element,  //parentElememt
+		floatHandle||base.floatHandle,  //parentElememt
 		target,
 		action
 	);
-//	this.element.appendChild(this.pane.element);
 	this.position(options.x,options.y);
 	if(options) {
 		if("message" in options) {
@@ -27,6 +23,9 @@ PaneFloat.prototype.getElement= function() {
 PaneFloat.prototype.getPane= function() {
 	return this.pane;
 };
+PaneFloat.prototype.hide = function() {
+	this.pane.hide();
+};
 PaneFloat.prototype.position = function (x,y) {
 	this.positionAbsolute(this.pane.base.getAdjustedPosition(x,y,this.pane.element))
 };
@@ -38,6 +37,9 @@ PaneFloat.prototype.movePane = function (p) {
 	const rect = this.pane.element.getBoundingClientRect();
 	this.positionAbsolute({x:rect.left+p.x,y:rect.top+p.y});
 	this.setMaxPaneSize();
+}
+PaneFloat.prototype.show = function() {
+	this.pane.show();
 };
 PaneFloat.prototype.setMaxPaneSize = function () {
 	const p = this.pane.element.getBoundingClientRect()

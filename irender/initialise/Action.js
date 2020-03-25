@@ -12,22 +12,28 @@ Action.prototype.exec_chart = function (node,ev,properties) {
 	try{
 		const chart=new IChart(this.base,this.passing,{loadDefer:true}),
 			load={callFunction:chart.setData,object:chart,onError:chart.displayError},
-			p=new Pane(this.base,
-					Object.assign({tab:false,title:node.title||""},this.base.getPane(this.pane||"_tabPane"),this.passing),
-					chart.element
-				),
-//			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},p),
-			floatingPane=this.exec_floatingPane(chart,ev,{onCloseHide:true,initiallyHide:true},{parent:p}),
+			pane=new Pane(this.base,
+				Object.assign({tab:false,title:node.title||""},this.base.getPane(this.pane||"_tabPane"),this.passing),
+				chart.element
+			),
+//			floatingPane=this.exec_floatingPane(chart.element,{onCloseHide:true,initiallyHide:true},pane),
+			floatingPane=this.exec_floatingPane(
+				chart,	//base 
+				ev,
+				{onCloseHide:true,initiallyHide:true},
+				{parent:pane}
+			),
 			table=this.exec_table(floatingPane.getPane(),
 				Object.assign({onLoad:load},node.passing,this.passing)
 			);
-			chart.setDataStore(table);
-		node.setDetail(this.title,p.element);
-		p.setDetail(chart.element);
+		chart.setDataStore(table);
+		node.setDetail(this.title,pane.element);
+		pane.setDetail(chart.element);
 //		.addAction({id:"charDisplay",type:"floatingPane",function:floatingPane.show})
 
-		p.headerRow.addRight([{image:"tableIcon",action:"display",tableData:table}]); 
-		p.headerRow.addRefresh({callFunction:chart.refresh,object:chart}); 
+		pane.headerRow.addRight([{image:"tableIcon",callFunction:floatingPane.show,object:floatingPane}]);
+//		pane.headerRow.addRight([{image:"tableIcon",action:"display",tableData:table}]);
+		pane.headerRow.addRefresh({callFunction:chart.refresh,object:chart}); 
 	} catch(ex) {
 		this.setCatchError(node,ex);
 	}
@@ -48,15 +54,16 @@ Action.prototype.exec_fileReader = function (node) {
 	    request.withCredentials = "true";
     	request.send();
 	};
-Action.prototype.exec_floatingPane = function (node,ev,p,target) {
+Action.prototype.exec_floatingPane = function (node,ev,properties,target) {
 	if(node.pane && node.pane.openDependant(this.id)){
 		return;
 	}
 	return new PaneFloat(this.base,
-		Object.assign({},this.base.getPane(this.pane||"_tabPane"),this.passing,p),  //paneProperties
-		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,p),  // options
+		Object.assign({},this.base.getPane(this.pane||"_tabPane"),this.passing,properties),  //paneProperties
+		Object.assign({y:ev.pageY,x:ev.pageX},this.passing,properties),  // options
 		target||this.getTarget(node),
-		this  // action
+		this,  // action
+		target.parent.element //floatHandle
 	);
 };
 Action.prototype.exec_folder = function (node) {

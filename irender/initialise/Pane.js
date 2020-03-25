@@ -23,31 +23,12 @@ function Pane(base,paneProperties={},parentElement,target,action) {
 		this.hide();
 	}
 }
-Pane.prototype.findDependant = function (id) {
-	return this.dependants.find(({action})=>action.id==id);
-}
-Pane.prototype.openDependant = function (id) {
-	const p=this.findDependant(id);
-	if(p) {
-		p.open();
-		return true;
-	} else {
-		return false;
-	}
-}
-Pane.prototype.setDependant = function (node) {
-	this.dependants.push(node);
-}
+Pane.prototype.addFloat = function (n) {
+	this.element.appendChild(n);
+};
 Pane.prototype.appendChild = function (n) {
 	this.centerRow.appendChild(n);
 	return this;
-};
-Pane.prototype.onclickClose = function (e) {
-	if(this.element && this.element.iRender && this.element.iRender.tabPane ) {
-		this.element.iRender.tabPane.closeTabTitle(this.element.iRender.title);
-		return;
-	}
-	this.close();
 };
 Pane.prototype.close = function () {
 	if(this.onCloseHide) {
@@ -60,12 +41,21 @@ Pane.prototype.closeDependants = function () {
 	this.dependants.forEach((c)=>c.close());
 	return this;
 };
+Pane.prototype.display = function () {
+	if(this.element.style.display == 'table') return;
+	this.styleDisplay=this.element.style.display;
+	this.element.style.display = 'table';
+//	this.displayDependants();
+};
 Pane.prototype.executeHeaderAction = function (id) {
 	if(this.headerRow) {
 		this.headerRow.executeAction(id);
 	}
 	return this;
 };
+Pane.prototype.findDependant = function (id) {
+	return this.dependants.find(({action})=>action.id==id);
+}
 Pane.prototype.getAction = function (id) {
 	if(this.headerRow) {
 		return this.headerRow.getAction(id);
@@ -86,16 +76,26 @@ Pane.prototype.hide = function () {
 	this.element.style.display = 'none';
 	this.closeDependants();
 };
-Pane.prototype.display = function () {
-	if(this.element.style.display == 'table') return;
-	this.styleDisplay=this.element.style.display;
-	this.element.style.display = 'table';
-//	this.displayDependants();
+Pane.prototype.onclickClose = function (e) {
+	if(this.element && this.element.iRender && this.element.iRender.tabPane ) {
+		this.element.iRender.tabPane.closeTabTitle(this.element.iRender.title);
+		return;
+	}
+	this.close();
 };
 Pane.prototype.open = function () {
 	this.element.style.display = this.styleDisplay;
 	return this;
 };
+Pane.prototype.openDependant = function (id) {
+	const p=this.findDependant(id);
+	if(p) {
+		p.open();
+		return true;
+	} else {
+		return false;
+	}
+}
 //Pane.prototype.sizeCenter = function () {
 //	this.centerNode.style.height= this.element.clientHeight
 //			-(this.headerNode?this.headerNode.element.getBoundingClientRect().Height:0)
@@ -110,6 +110,9 @@ Pane.prototype.removeDependants = function () {
 	this.dependants.forEach((c)=>c.remove());
 	return this;
 };
+Pane.prototype.setDependant = function (node) {
+	this.dependants.push(node);
+}
 Pane.prototype.setDetail = function() {
 	if(arguments.length>1) {
 		this.setTitle(arguments[0]);
@@ -142,3 +145,4 @@ Pane.prototype.setTitle = function (t) {
 	return this;
 };
 Pane.prototype.onLoadError = Pane.prototype.setError;
+Pane.prototype.show = Pane.prototype.display;

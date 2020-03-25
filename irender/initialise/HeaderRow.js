@@ -21,7 +21,11 @@ function HeaderRow(base,headerProperties,parentElement,options) {
 HeaderRow.prototype.addRefresh = function (refresh) {
 	const headerRow=this,refreshIcon=css.setClass(document.createElement("A"),"icon");
 	this.left.appendChild(refreshIcon);
-	refreshIcon.addEventListener('click',()=>refresh.callFunction.apply(refresh.object,refresh.parameters), false);
+	if(refresh.callFunction) {
+		refreshIcon.addEventListener('click',()=>refresh.callFunction.apply(refresh.object,refresh.parameters), false);
+	} else {
+		throw Error("missing property callFunction");
+	}
 	refreshIcon.appendChild(this.base.getImage("refreshIcon"));
 	refreshIcon.appendChild(this.base.getImage("refreshIconOver","none"));
 	refreshIcon.addEventListener('mouseover', ()=>headerRow.setIcon(refreshIcon,"refreshIconOver"), false);
@@ -33,8 +37,12 @@ HeaderRow.prototype.addRight = function (action) {
 	} else {
 		if(action.image) {
 			const iconNode=css.setClass(this.base.getImage(action.image),"CellRight");
-			iconNode.addEventListener('click', this.onclickAction.bind(this), false);
-			iconNode.iRenderAction=Object.assign({},this.base.actions[action.action],action);
+			if(action.callFunction){
+				iconNode.addEventListener('click',()=>action.callFunction.apply(action.object,action.parameters), false);
+			} else{
+				iconNode.addEventListener('click', this.onclickAction.bind(this), false);
+				iconNode.iRenderAction=Object.assign({},this.base.actions[action.action],action);
+			}
 //			iconNode.iRenderAction=this.base.actions[action.action];
 			this.right.insertBefore(iconNode, this.right.firstchild);
 		}
