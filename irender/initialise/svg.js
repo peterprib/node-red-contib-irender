@@ -44,12 +44,8 @@ Svg.prototype.addBase=function() {
 	const mousedown=this.options.mousedown||this.properties.mousedown;
 	this.setOn("mousedown","mouseup","mousemove","click","dblclick","resize");
 };
-Svg.prototype.setOn=function(onEvents) {
-	(onEvents instanceof Array?onEvents:[...arguments]).forEach(onEvent=>{
-		const event=this.options[onEvent]||this[onEvent]||null;
-		if(event)
-			this.svg.addEventListener(onEvent,event.call.bind(event.object), false);
-	});
+Svg.prototype.addExperimental=function() {
+	this.addWatermark("Experimental");
 };
 Svg.prototype.addLegend=function(properties) {
 	Object.assign(this.legend,properties===true?null:properties);
@@ -72,6 +68,11 @@ Svg.prototype.addLegendRow=function(options,text,colour) {
 	this.legendFitPane();
 	return this;
 }
+Svg.prototype.addWatermark=function(title) {
+	this.drawObject({action:"g",id:"watermark",children:[
+		{action:"text",x:5,y:5,transform:"rotate(45)","font-size":30,children:[title]}
+	]});
+};
 Svg.prototype.appendTo=function(n) {
 	n.appendChild(this.svg);
 	this.parent;
@@ -352,6 +353,35 @@ Svg.prototype.set=function(o) {
 		}
 	}
 };
+Svg.prototype.setOn=function(onEvents) {
+	(onEvents instanceof Array?onEvents:[...arguments]).forEach(onEvent=>{
+		const event=this.options[onEvent]||this[onEvent]||null;
+		if(event)
+			this.svg.addEventListener(onEvent,event.call.bind(event.object), false);
+	});
+};
+Svg.prototype.setMoveSVGObject=function(ev) {
+	if(ev.target.nodeName=="svg") return;
+	if(ev.target.getAttribute("draggable")==="false") return;
+	ev.stopPropagation();
+	ev.preventDefault();
+	this.moveObject=ev.target;
+	this.moveX=ev.clientX;
+	this.moveY=ev.clientY;
+	this.moveObject.addEventListener('mouseout', this.moveSVGObjectReset.bind(this), false);
+	this.moveObject.addEventListener('mouseup', this.moveSVGObjectReset.bind(this), false);
+	this.moveObject.addEventListener('mousemove', this.moveSVGObject.bind(this), false);
+	this.moveObject.addEventListener('click', eventDoNothing.bind(this), false);
+
+/*
+	this.moveTransform=his.moveObject.getAttributeNS(null, "transform");
+	if(this.moveTransform=null) this.moveTransform="matrix(1 0 0 1 0 0)";
+	this.moveMatrix=this.moveTransform.slice(7,-1).split(' ');
+	for(var i=0; i<this.moveMatrix.length; i++) {
+		this.moveMatrix[i]=parseFloat(this.moveMatrix[i]);
+	}
+*/
+};
 Svg.prototype.toJSON=function(o) {
 	let i,n,p,r={action:o.nodeName};
 	for(i=0;i<o.attributes.length;i++) {
@@ -376,28 +406,6 @@ Svg.prototype.toJSON=function(o) {
 		r.children=o.children.map(c=>this.toJSON(c));
 	}
 	return r;
-};
-Svg.prototype.setMoveSVGObject=function(ev) {
-	if(ev.target.nodeName=="svg") return;
-	if(ev.target.getAttribute("draggable")==="false") return;
-	ev.stopPropagation();
-	ev.preventDefault();
-	this.moveObject=ev.target;
-	this.moveX=ev.clientX;
-	this.moveY=ev.clientY;
-	this.moveObject.addEventListener('mouseout', this.moveSVGObjectReset.bind(this), false);
-	this.moveObject.addEventListener('mouseup', this.moveSVGObjectReset.bind(this), false);
-	this.moveObject.addEventListener('mousemove', this.moveSVGObject.bind(this), false);
-	this.moveObject.addEventListener('click', eventDoNothing.bind(this), false);
-
-/*
-	this.moveTransform=his.moveObject.getAttributeNS(null, "transform");
-	if(this.moveTransform=null) this.moveTransform="matrix(1 0 0 1 0 0)";
-	this.moveMatrix=this.moveTransform.slice(7,-1).split(' ');
-	for(var i=0; i<this.moveMatrix.length; i++) {
-		this.moveMatrix[i]=parseFloat(this.moveMatrix[i]);
-	}
-*/
 };
 /*
 Svg.prototype.delta=function(s,e) {

@@ -2,6 +2,7 @@ function IChartBubble(chart){
 	this.chart=chart;
 }
 IChartBubble.prototype.isCartezian=true;
+IChartBubble.prototype.zRequired=true;
 IChartBubble.prototype.draw=function() {
 	const transparency=0.8,
 		zChartRange=Math.min(this.chart.width,this.chart.height)/4;

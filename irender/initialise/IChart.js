@@ -218,7 +218,7 @@ IChart.prototype.setData=function(tableData) {
 	axis.x.column=this.dataStore.columns[this.chart.axis.x.name];
 	this.dataStore.setColors();
 	axis.y.columns=this.dataStore.filterColumn(c=>c.isMeasure()&&axis.x.column.name!==c.name).map(c=>c.columnObject);
-	if(this.type=="bubble") {
+	if(this.chartingObject.zRequired) {
 		if(axis.z.columns==null) {
 			if(!axis.y.columns || axis.y.columns.length<1) {
 				throw Error("z value set and no y axis values available");
