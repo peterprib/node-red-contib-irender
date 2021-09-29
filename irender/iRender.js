@@ -6,7 +6,7 @@ const nodeLabel="iRender";
 
 const fs=require('fs'),
 	path=require('path'),
-	mustache = require("mustache"),
+	mustache=require("mustache"),
 	initialPath=path.join(__dirname,"initialise"),
 	cookieParser = require("cookie-parser"),
 	express=require("express");
